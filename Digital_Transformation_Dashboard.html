@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Transformation Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --font: 'Verdana', Geneva, Tahoma, sans-serif;
+  --bg:          #f2f5fb;
+  --bg2:         #ffffff;
+  --bg3:         #eaeff8;
+  --bg4:         #dce4f2;
+  --text:        #18243f;
+  --text2:       #3a4a6b;
+  --text3:       #7282a4;
+  --border:      #c8d4e8;
+  --accent:      #1a4fa8;
+  --accent2:     #2563eb;
+  --accent-lt:   #dbeafe;
+  --accent-dk:   #1e3a8a;
+  --hdr-bg:      #0f2352;
+  --tab-act:     #1a4fa8;
+  --tab-in:      #eaeff8;
+  --tab-hov:     #d0dbf5;
+  --green-bg:    #d1fae5;
+  --green-tx:    #065f46;
+  --neu-bg:      #f1f5f9;
+  --neu-tx:      #475569;
+  --hl-row:      #eff6ff;
+  --shadow:      0 2px 14px rgba(26,79,168,.08);
+  --shadow2:     0 4px 28px rgba(26,79,168,.14);
+  /* rec colours */
+  --rec-gap:     #fff7ed;
+  --rec-gap-bdr: #fb923c;
+  --rec-gap-tx:  #9a3412;
+  --rec-sug:     #f0fdf4;
+  --rec-sug-bdr: #22c55e;
+  --rec-sug-tx:  #14532d;
+  --rec-imp:     #fdf4ff;
+  --rec-imp-bdr: #a855f7;
+  --rec-imp-tx:  #581c87;
+  --rec-hdr:     #1a4fa8;
+}
+[data-theme="dark"] {
+  --bg:          #0c1527;
+  --bg2:         #172035;
+  --bg3:         #1f2d46;
+  --bg4:         #29395a;
+  --text:        #e2e8f7;
+  --text2:       #94a3c0;
+  --text3:       #5a6e90;
+  --border:      #2a3d5e;
+  --accent:      #3b82f6;
+  --accent2:     #60a5fa;
+  --accent-lt:   #1e3a5f;
+  --accent-dk:   #93c5fd;
+  --hdr-bg:      #060e1e;
+  --tab-act:     #2563eb;
+  --tab-in:      #172035;
+  --tab-hov:     #1f2d46;
+  --green-bg:    #052e16;
+  --green-tx:    #6ee7b7;
+  --neu-bg:      #1e293b;
+  --neu-tx:      #94a3b8;
+  --hl-row:      #1e3a5f;
+  --shadow:      0 2px 14px rgba(0,0,0,.35);
+  --shadow2:     0 4px 28px rgba(0,0,0,.45);
+  --rec-gap:     #2d1700;
+  --rec-gap-bdr: #f97316;
+  --rec-gap-tx:  #fdba74;
+  --rec-sug:     #052e10;
+  --rec-sug-bdr: #16a34a;
+  --rec-sug-tx:  #86efac;
+  --rec-imp:     #1e0a33;
+  --rec-imp-bdr: #9333ea;
+  --rec-imp-tx:  #d8b4fe;
+  --rec-hdr:     #60a5fa;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body{font-family:var(--font);font-size:12px;background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh}
+
+/* ─── HEADER ─────────────────────────────────────────────────── */
+.dsh-header{
+  background:var(--hdr-bg);
+  color:#fff;
+  padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:1000;
+  min-height:58px;
+  border-bottom:3px solid var(--accent2);
+  box-shadow:var(--shadow2);
+}
+.dsh-header h1{font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn-theme{
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);
+  color:#fff;font-family:var(--font);font-size:10px;
+  padding:5px 12px;border-radius:4px;cursor:pointer;transition:background .2s
+}
+.btn-theme:hover{background:rgba(255,255,255,.24)}
+.btn-export-all{
+  background:#fff;color:var(--accent);border:none;
+  font-family:var(--font);font-size:10px;font-weight:700;
+  padding:6px 15px;border-radius:4px;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+  transition:background .2s,box-shadow .2s;letter-spacing:.03em
+}
+.btn-export-all:hover{background:#dbeafe;box-shadow:0 4px 16px rgba(0,0,0,.22)}
+
+/* ─── COMPANY TABS BAR ───────────────────────────────────────── */
+.tabs-bar{
+  background:var(--bg2);border-bottom:2px solid var(--border);
+  padding:0 28px;display:flex;gap:2px;overflow-x:auto;
+  position:sticky;top:61px;z-index:900;
+  box-shadow:var(--shadow);scrollbar-width:thin
+}
+.ctab{
+  font-family:var(--font);font-size:11px;font-weight:700;
+  padding:12px 18px;border:none;
+  background:var(--tab-in);color:var(--text2);
+  cursor:pointer;border-radius:4px 4px 0 0;white-space:nowrap;
+  transition:background .2s,color .2s;letter-spacing:.03em;
+  border-bottom:3px solid transparent;margin-bottom:-2px
+}
+.ctab:hover{background:var(--tab-hov);color:var(--accent)}
+.ctab.active{background:var(--tab-act);color:#fff;border-bottom-color:var(--accent2)}
+/* Special Recommendations tab styling */
+.ctab.rec-tab{border-left:3px solid #f59e0b}
+.ctab.rec-tab.active{background:linear-gradient(135deg,#92400e,#d97706);border-bottom-color:#fbbf24}
+
+/* ─── COMPANY CONTENT PANELS ─────────────────────────────────── */
+.co-panel{display:none;padding:22px 28px}
+.co-panel.active{display:block}
+
+/* ─── SECTION CARDS ──────────────────────────────────────────── */
+.sec-card{
+  background:var(--bg2);border-radius:8px;
+  box-shadow:var(--shadow);margin-bottom:20px;
+  border:1px solid var(--border);overflow:hidden
+}
+.sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;background:var(--bg3);
+  border-bottom:2px solid var(--border);
+  cursor:pointer;user-select:none;transition:background .15s
+}
+.sec-hdr:hover{background:var(--bg4)}
+.sec-title{
+  font-size:11px;font-weight:700;color:var(--accent);
+  letter-spacing:.05em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px
+}
+.sec-num{
+  background:var(--accent);color:#fff;border-radius:3px;
+  font-size:9px;font-weight:800;padding:2px 7px
+}
+.sec-chev{font-size:13px;color:var(--text3);transition:transform .25s}
+.sec-hdr.collapsed .sec-chev{transform:rotate(-90deg)}
+.sec-body{padding:15px 18px}
+.sec-body.collapsed{display:none}
+.primary-badge{
+  background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;
+  padding:2px 8px;border-radius:12px;letter-spacing:.05em;text-transform:uppercase
+}
+
+/* ─── TABLE CONTROLS ─────────────────────────────────────────── */
+.tbl-ctrl{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
+.srch{
+  font-family:var(--font);font-size:11px;padding:6px 12px;
+  border:1.5px solid var(--border);border-radius:4px;
+  background:var(--bg);color:var(--text);min-width:210px;
+  transition:border-color .2s
+}
+.srch:focus{outline:none;border-color:var(--accent)}
+.row-cnt{
+  font-size:10px;color:var(--text3);background:var(--bg3);
+  padding:2px 9px;border-radius:10px;border:1px solid var(--border)
+}
+.btn-exp-sec{
+  margin-left:auto;font-family:var(--font);font-size:10px;font-weight:700;
+  padding:5px 12px;background:var(--accent-lt);color:var(--accent);
+  border:1.5px solid var(--accent);border-radius:4px;cursor:pointer;
+  transition:background .2s,color .2s
+}
+.btn-exp-sec:hover{background:var(--accent);color:#fff}
+
+/* ─── TABLE WRAPPER ──────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;max-height:460px;border-radius:4px;border:1px solid var(--border)}
+table{border-collapse:collapse;width:100%;font-size:11px;min-width:580px}
+thead th{
+  background:var(--accent);color:#fff;
+  padding:9px 11px;text-align:left;
+  font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+  white-space:nowrap;position:sticky;top:0;z-index:5;
+  cursor:pointer;user-select:none;transition:background .15s
+}
+thead th:hover{background:var(--accent-dk)}
+.si{font-size:9px;margin-left:3px;opacity:.65}
+tbody tr:nth-child(even){background:var(--bg3)}
+tbody tr:nth-child(odd){background:var(--bg2)}
+tbody tr:hover{background:var(--hl-row)}
+tbody td{
+  padding:8px 11px;border-bottom:1px solid var(--border);
+  vertical-align:top;color:var(--text);line-height:1.45
+}
+.nm{color:var(--text3);font-style:italic}
+/* status badges */
+.b-new{background:#dbeafe;color:#1e3a8a;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;white-space:nowrap}
+.b-act{background:var(--green-bg);color:var(--green-tx);padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
+.b-upg{background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
+.b-exp{background:#f3e8ff;color:#6b21a8;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
+.b-ong{background:#ecfdf5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
+.b-imp{background:#fef9c3;color:#713f12;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
+/* financial */
+.fin-y{background:var(--green-bg);color:var(--green-tx);padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+.fin-n{background:var(--neu-bg);color:var(--neu-tx);padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+tr.hi-row{background:#fffbeb !important}
+[data-theme="dark"] tr.hi-row{background:#2d200a !important}
+
+/* ─── CHART ──────────────────────────────────────────────────── */
+.btn-chart{
+  font-family:var(--font);font-size:10px;font-weight:700;
+  padding:5px 12px;background:var(--bg3);color:var(--text2);
+  border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all .2s
+}
+.btn-chart.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chart-box{display:none;margin-top:14px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px}
+.chart-box.vis{display:block}
+
+/* ─── PATTERN LIST ───────────────────────────────────────────── */
+.pat-list{list-style:none}
+.pat-list li{
+  padding:10px 14px;border-left:4px solid var(--accent);
+  background:var(--bg3);margin-bottom:8px;border-radius:0 4px 4px 0;
+  font-size:11px;line-height:1.55;color:var(--text)
+}
+.pat-list li strong{color:var(--accent)}
+
+/* ─── SOURCE LIST ────────────────────────────────────────────── */
+.src-list{list-style:none}
+.src-list li{
+  padding:8px 14px;border-left:3px solid var(--border);
+  margin-bottom:6px;background:var(--bg3);border-radius:0 4px 4px 0;
+  font-size:11px;color:var(--text2)
+}
+.src-list li strong{color:var(--text)}
+
+/* ─────────────────────────────────────────────────────────────
+   RECOMMENDATIONS TAB
+   ───────────────────────────────────────────────────────────── */
+.rec-intro{
+  background:linear-gradient(135deg,var(--accent),#7c3aed);
+  color:#fff;border-radius:8px;padding:22px 26px;margin-bottom:22px;
+  box-shadow:var(--shadow2)
+}
+.rec-intro h2{font-size:15px;font-weight:700;margin-bottom:6px;letter-spacing:.03em}
+.rec-intro p{font-size:11px;opacity:.9;line-height:1.6}
+
+/* company rec block */
+.rec-company{margin-bottom:28px}
+.rec-company-hdr{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px 8px 0 0;padding:13px 18px;
+  cursor:pointer;user-select:none;transition:background .15s
+}
+.rec-company-hdr:hover{background:var(--bg4)}
+.rec-co-name{font-size:13px;font-weight:700;color:var(--rec-hdr);letter-spacing:.03em}
+.rec-co-badge{
+  font-size:9px;font-weight:800;padding:3px 10px;border-radius:12px;
+  background:var(--accent-lt);color:var(--accent);letter-spacing:.04em;text-transform:uppercase
+}
+.rec-co-chev{margin-left:auto;font-size:13px;color:var(--text3);transition:transform .25s}
+.rec-company-hdr.collapsed .rec-co-chev{transform:rotate(-90deg)}
+.rec-body{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+.rec-body.collapsed{display:none}
+
+/* individual rec item */
+.rec-item{padding:18px 20px;border-bottom:1px solid var(--border)}
+.rec-item:last-child{border-bottom:none}
+.rec-item-hdr{
+  display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;cursor:pointer
+}
+.rec-num-bubble{
+  min-width:30px;height:30px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0
+}
+.rec-item-title{font-size:12px;font-weight:700;color:var(--text);line-height:1.45}
+.rec-item-subtitle{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.03em;text-transform:uppercase}
+.rec-toggle-icon{margin-left:auto;font-size:12px;color:var(--text3);flex-shrink:0;transition:transform .2s}
+.rec-item-hdr.open .rec-toggle-icon{transform:rotate(180deg)}
+.rec-detail{display:none;padding-top:4px}
+.rec-detail.open{display:block}
+
+/* Gap / Suggestion / Impact cards inside rec */
+.rec-card{border-radius:6px;padding:13px 16px;margin-bottom:10px}
+.rec-card:last-child{margin-bottom:0}
+.rec-card-lbl{
+  font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:6px;display:flex;align-items:center;gap:6px
+}
+.rec-card-lbl .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rec-card-body{font-size:11px;line-height:1.6;color:var(--text)}
+.rec-card-body strong{font-weight:700}
+.gap-card{background:var(--rec-gap);border-left:4px solid var(--rec-gap-bdr)}
+.gap-card .rec-card-lbl{color:var(--rec-gap-tx)}
+.gap-card .dot{background:var(--rec-gap-bdr)}
+.sug-card{background:var(--rec-sug);border-left:4px solid var(--rec-sug-bdr)}
+.sug-card .rec-card-lbl{color:var(--rec-sug-tx)}
+.sug-card .dot{background:var(--rec-sug-bdr)}
+.imp-card{background:var(--rec-imp);border-left:4px solid var(--rec-imp-bdr)}
+.imp-card .rec-card-lbl{color:var(--rec-imp-tx)}
+.imp-card .dot{background:var(--rec-imp-bdr)}
+
+/* metrics row inside rec */
+.rec-metrics{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:10px
+}
+.rec-metric{
+  background:var(--accent-lt);border:1px solid var(--accent);
+  border-radius:6px;padding:6px 14px;font-size:10px;font-weight:700;color:var(--accent);
+  display:flex;flex-direction:column;align-items:center;gap:2px
+}
+.rec-metric span{font-size:14px;font-weight:800}
+
+/* export rec btn */
+.btn-exp-rec{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font);font-size:10px;font-weight:700;
+  padding:6px 14px;background:var(--accent-lt);color:var(--accent);
+  border:1.5px solid var(--accent);border-radius:4px;cursor:pointer;
+  margin-top:16px;transition:background .2s,color .2s
+}
+.btn-exp-rec:hover{background:var(--accent);color:#fff}
+
+/* ─── UTILITY ─────────────────────────────────────────────────── */
+.note{font-size:10px;color:var(--text3);margin-bottom:8px}
+@media(max-width:768px){
+  .dsh-header{padding:0 12px}
+  .co-panel{padding:12px 10px}
+  .sec-body{padding:10px 10px}
+  .dsh-header h1{font-size:10px}
+  .rec-metrics{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ════════════════════════════════ -->
+<header class="dsh-header">
+  <h1>🏭 Digital Transformation Intelligence Dashboard</h1>
+  <div class="hdr-right">
+    <button class="btn-theme" onclick="toggleTheme()">🌙 Dark &nbsp;/&nbsp; ☀️ Light</button>
+    <button class="btn-export-all" onclick="exportAll()">⬇ Export All to Excel</button>
+  </div>
+</header>
+
+<!-- ═══════════════════ TABS ══════════════════════════════════ -->
+<div class="tabs-bar">
+  <button class="ctab active"   onclick="showTab('mrf',this)">MRF Limited</button>
+  <button class="ctab"          onclick="showTab('jk',this)">JK Tyre &amp; Industries</button>
+  <button class="ctab"          onclick="showTab('bkt',this)">Balkrishna Industries (BKT)</button>
+  <button class="ctab"          onclick="showTab('ceat',this)">CEAT Limited</button>
+  <button class="ctab"          onclick="showTab('apo',this)">Apollo Tyres</button>
+  <button class="ctab rec-tab"  onclick="showTab('rec',this)">💡 Recommendations</button>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MRF LIMITED
+═══════════════════════════════════════════════════════════════ -->
+<div id="tab-mrf" class="co-panel active">
+
+  <!-- S1 Timeline -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)">
+      <span class="sec-title"><span class="sec-num">1</span>Master Digital Initiatives Timeline<span class="primary-badge">PRIMARY</span></span>
+      <span class="sec-chev">▾</span>
+    </div>
+    <div class="sec-body">
+      <div class="tbl-ctrl">
+        <input class="srch" placeholder="Search timeline…" oninput="filterTbl('mrf-t1',this.value)">
+        <span class="row-cnt" id="mrf-t1-c"></span>
+        <button class="btn-exp-sec" onclick="expSec('mrf-t1','MRF_Timeline')">Export</button>
+      </div>
+      <div class="tbl-wrap"><table id="mrf-t1">
+        <thead><tr>
+          <th onclick="srt('mrf-t1',0)">Year<span class="si">⇅</span></th>
+          <th onclick="srt('mrf-t1',1)">Initiative<span class="si">⇅</span></th>
+          <th onclick="srt('mrf-t1',2)">Status<span class="si">⇅</span></th>
+          <th onclick="srt('mrf-t1',3)">Reported Metrics<span class="si">⇅</span></th>
+          <th onclick="srt('mrf-t1',4)">Business Impact<span class="si">⇅</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td>2014-16</td><td>Machinery Modernization</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Reduced manual intervention; improved quality and accuracy.</td></tr>
+          <tr><td>2016</td><td>Integrated SAP ERP</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Connecting 10 plants and 192 offices for seamless data recording and reporting.</td></tr>
+          <tr><td>2017</td><td>Online Retailing Portal</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Provided customer convenience for tyre and service purchases.</td></tr>
+          <tr><td>2018</td><td>"Bandhan" Mobile App</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Direct digital engagement with paint contractors in the Specialty Coatings division.</td></tr>
+          <tr><td>2018</td><td>"Colordrome" Tinting</td><td><span class="b-exp">Expanded</span></td><td>3,000+ shades</td><td>On-demand customization at point-of-sale for premium dealers.</td></tr>
+          <tr><td>2018</td><td>Energy Management (EnMS)</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Micro-level data capturing for power and steam to drive conservation.</td></tr>
+          <tr><td>2019</td><td>Equipment Health Monitoring</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Real-time tracking to maximize equipment utilization.</td></tr>
+          <tr><td>2020</td><td>Digital "Paint Preview"</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>B2C visualization tool to improve conversion rates for residential painting.</td></tr>
+          <tr><td>2021</td><td>Sustainable Sourcing Portal</td><td><span class="b-new">New</span></td><td>97% ISO 14001</td><td>Vendor management system ensuring raw materials meet environmental standards.</td></tr>
+          <tr><td>2022</td><td>Salesforce CRM</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Streamlining engagement with internal sales teams, dealers, and contractors.</td></tr>
+          <tr><td>2024</td><td>SAP Audit Trail (Edit Log)</td><td><span class="b-imp">Improved</span></td><td class="nm">Not Mentioned</td><td>Inbuilt feature to prevent tampering of financial and operational records.</td></tr>
+          <tr><td>2025</td><td>Robotic Wheel Alignment</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Introduced at Tyredrome for high-precision vehicle care.</td></tr>
+          <tr><td>2025</td><td>Performance Dashboards</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Monitoring plant equipment to minimize energy losses instantaneously.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- S2 Tools -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">2</span>Digital Tools Inventory</span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <div class="tbl-ctrl"><input class="srch" placeholder="Search tools…" oninput="filterTbl('mrf-t2',this.value)"><span class="row-cnt" id="mrf-t2-c"></span><button class="btn-exp-sec" onclick="expSec('mrf-t2','MRF_Tools')">Export</button></div>
+      <div class="tbl-wrap"><table id="mrf-t2">
+        <thead><tr><th onclick="srt('mrf-t2',0)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('mrf-t2',1)">First Year<span class="si">⇅</span></th><th onclick="srt('mrf-t2',2)">Last Year<span class="si">⇅</span></th><th onclick="srt('mrf-t2',3)">Area<span class="si">⇅</span></th><th onclick="srt('mrf-t2',4)">Purpose<span class="si">⇅</span></th><th onclick="srt('mrf-t2',5)">Status<span class="si">⇅</span></th></tr></thead>
+        <tbody>
+          <tr><td>SAP ERP</td><td>2016</td><td>2025</td><td>Finance/SCM</td><td>Recording and Reporting</td><td><span class="b-act">Active</span></td></tr>
+          <tr><td>Energy Mgmt System (EnMS)</td><td>2018</td><td>2023</td><td>Mfg</td><td>Energy Conservation</td><td><span class="b-act">Active</span></td></tr>
+          <tr><td>Salesforce CRM</td><td>2022</td><td>2022</td><td>Commercial</td><td>Stakeholder Engagement</td><td><span class="b-act">Active</span></td></tr>
+          <tr><td>Bandhan App</td><td>2018</td><td>2018</td><td>Commercial</td><td>Contractor Engagement</td><td><span class="b-act">Active</span></td></tr>
+          <tr><td>E-voting Platform (NSDL/CDSL)</td><td>2019</td><td>2025</td><td>Governance</td><td>Shareholder Voting</td><td><span class="b-act">Active</span></td></tr>
+          <tr><td>Colordrome Tinting Machines</td><td>2018</td><td>2020</td><td>Retail</td><td>Shade Customization</td><td><span class="b-act">Active</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- S3 Certifications -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">3</span>Certifications &amp; Standards</span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('mrf-t3',this.value)"><span class="row-cnt" id="mrf-t3-c"></span><button class="btn-exp-sec" onclick="expSec('mrf-t3','MRF_Certifications')">Export</button></div>
+      <div class="tbl-wrap"><table id="mrf-t3">
+        <thead><tr><th onclick="srt('mrf-t3',0)">Year<span class="si">⇅</span></th><th onclick="srt('mrf-t3',1)">Certification<span class="si">⇅</span></th><th onclick="srt('mrf-t3',2)">Type<span class="si">⇅</span></th><th onclick="srt('mrf-t3',3)">Scope/Plant<span class="si">⇅</span></th></tr></thead>
+        <tbody>
+          <tr><td>2017</td><td>ISO 9001 / ISO 14001 / OHSAS 18001</td><td>Quality &amp; Environment</td><td>All manufacturing locations.</td></tr>
+          <tr><td>2021</td><td>AS9100D</td><td>Aerospace</td><td>Medak and Arakonam plants.</td></tr>
+          <tr><td>2022</td><td>IATF 16949:2016 / ISO 45001</td><td>Quality &amp; Safety</td><td>All manufacturing locations.</td></tr>
+          <tr><td>2023</td><td>ISO 45001:2018 / ISO 14001:2015</td><td>Health/Safety/Env</td><td>9 of 10 plants; Dahej in process.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- S4 Financial Reflection -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">4</span>Financial Reflection Analysis</span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('mrf-t4',this.value)"><span class="row-cnt" id="mrf-t4-c"></span><button class="btn-exp-sec" onclick="expSec('mrf-t4','MRF_Fin_Reflection')">Export</button></div>
+      <div class="tbl-wrap"><table id="mrf-t4">
+        <thead><tr><th onclick="srt('mrf-t4',0)">Year<span class="si">⇅</span></th><th onclick="srt('mrf-t4',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('mrf-t4',2)">Financial Impact?<span class="si">⇅</span></th><th onclick="srt('mrf-t4',3)">Line Item<span class="si">⇅</span></th><th onclick="srt('mrf-t4',4)">Statement from Report<span class="si">⇅</span></th></tr></thead>
+        <tbody>
+          <tr><td>2024</td><td>SAP Audit Trail</td><td><span class="fin-y">Yes</span></td><td>Compliance</td><td>"used an accounting software (SAP)... inbuilt feature of recording audit trail (edit log) facility".</td></tr>
+          <tr><td>2022</td><td>Salesforce CRM</td><td><span class="fin-n">No</span></td><td>N/A</td><td class="nm">No Direct Link Mentioned.</td></tr>
+          <tr><td>2018</td><td>EnMS</td><td><span class="fin-n">No</span></td><td>N/A</td><td class="nm">No Direct Link Mentioned.</td></tr>
+          <tr><td>2016</td><td>Machinery Modernization</td><td><span class="fin-n">No</span></td><td>N/A</td><td class="nm">No Direct Link Mentioned.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- S5 Financial Trends -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">5</span>Supporting Financial Trend Table</span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <div class="tbl-ctrl">
+        <input class="srch" placeholder="Search…" oninput="filterTbl('mrf-t5',this.value)">
+        <button class="btn-chart" id="mrf-cb" onclick="toggleChart('mrf')">📈 Show Chart</button>
+        <span class="row-cnt" id="mrf-t5-c"></span>
+        <button class="btn-exp-sec" onclick="expSec('mrf-t5','MRF_Fin_Trends')">Export</button>
+      </div>
+      <div class="tbl-wrap"><table id="mrf-t5">
+        <thead><tr><th onclick="srt('mrf-t5',0)">Year<span class="si">⇅</span></th><th onclick="srt('mrf-t5',1)">Revenue (₹ Cr)<span class="si">⇅</span></th><th onclick="srt('mrf-t5',2)">EBITDA (%)<span class="si">⇅</span></th><th onclick="srt('mrf-t5',3)">Employee Cost (₹ Cr)<span class="si">⇅</span></th><th onclick="srt('mrf-t5',4)">Other Expenses (₹ Cr)<span class="si">⇅</span></th><th onclick="srt('mrf-t5',5)">Inventory (₹ Cr)<span class="si">⇅</span></th><th onclick="srt('mrf-t5',6)">Capex R&amp;D (₹ Cr)<span class="si">⇅</span></th></tr></thead>
+        <tbody>
+          <tr><td>2014-16</td><td>20,243.94</td><td class="nm">Not Mentioned</td><td>1,285.22</td><td>3,198.62</td><td>1,826.25</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2016-17</td><td>14,651.24</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2017-18</td><td>15,286.91</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>110.86</td></tr>
+          <tr><td>2018-19</td><td>15,959.71</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2019-20</td><td>16,135.33</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>2,852.69</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2020-21</td><td>16,059.93</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>2,880.33</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2021-22</td><td>19,006.28</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>4,061.72</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2022-23</td><td>22,824.12</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>4,042.68</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2023-24</td><td>24,979.17</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>4,360.72</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2024-25</td><td>27,943.28</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td class="nm">Not Mentioned</td><td>5,539.34</td><td>20.79</td></tr>
+        </tbody>
+      </table></div>
+      <div class="chart-box" id="mrf-chart"><canvas id="mrf-cv" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- S6 Pattern -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">6</span>Transformation Pattern Analysis</span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <ul class="pat-list">
+        <li><strong>First major digital initiative observed:</strong> Integration of a "robust" SAP ERP system across all factories and offices in 2016.</li>
+        <li><strong>Most frequently used tools:</strong> SAP ERP (ongoing), Energy Management Systems (EnMS), and digital e-voting platforms.</li>
+        <li><strong>Evidence of upgrades/replacements:</strong> Introduction of the SAP Audit Trail (edit log) in 2024 as a governance upgrade to the existing ERP.</li>
+        <li><strong>Any repeated investments without clear benefits:</strong> Inventory digital tracking tools are mentioned, yet Inventory values rose 27% in 2025, alongside a jump in SLOB provisions.</li>
+        <li><strong>Areas with strongest measurable improvement:</strong> Energy conservation, with management citing the EnMS for "benchmarking best performance" across plants.</li>
+        <li><strong>Areas with no visible improvement:</strong> Forecasting accuracy, where inventory growth often outpaces sales growth despite integrated ERP data inflow.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- S7 Source -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">7</span>Source Traceability</span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <ul class="src-list">
+        <li><strong>Financial Data:</strong> Standalone/Consolidated P&amp;L and Balance Sheets.</li>
+        <li><strong>Digital &amp; Operational Initiatives:</strong> MD&amp;A and "Conservation of Energy" Annexures.</li>
+        <li><strong>Certifications:</strong> Business Responsibility Reports (Principle 2).</li>
+        <li><strong>Executive Snapshot:</strong> "Racing Ahead" / Ten Year Financial Summary.</li>
+      </ul>
+    </div>
+  </div>
+</div><!-- /MRF -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     JK TYRE
+═══════════════════════════════════════════════════════════════ -->
+<div id="tab-jk" class="co-panel">
+  <!-- S1 Timeline -->
+  <div class="sec-card">
+    <div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">1</span>Master Digital Initiatives Timeline<span class="primary-badge">PRIMARY</span></span><span class="sec-chev">▾</span></div>
+    <div class="sec-body">
+      <div class="tbl-ctrl"><input class="srch" placeholder="Search timeline…" oninput="filterTbl('jk-t1',this.value)"><span class="row-cnt" id="jk-t1-c"></span><button class="btn-exp-sec" onclick="expSec('jk-t1','JK_Timeline')">Export</button></div>
+      <div class="tbl-wrap"><table id="jk-t1">
+        <thead><tr><th onclick="srt('jk-t1',0)">Year<span class="si">⇅</span></th><th onclick="srt('jk-t1',1)">Area<span class="si">⇅</span></th><th onclick="srt('jk-t1',2)">Initiative<span class="si">⇅</span></th><th onclick="srt('jk-t1',3)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('jk-t1',4)">Status<span class="si">⇅</span></th><th onclick="srt('jk-t1',5)">Previous Tool<span class="si">⇅</span></th><th onclick="srt('jk-t1',6)">Objective<span class="si">⇅</span></th><th onclick="srt('jk-t1',7)">Reported Metrics<span class="si">⇅</span></th><th onclick="srt('jk-t1',8)">Business Impact<span class="si">⇅</span></th><th onclick="srt('jk-t1',9)">Comments<span class="si">⇅</span></th></tr></thead>
+        <tbody>
+          <tr><td>2016</td><td>Dispatch / SC</td><td>IT-enabled transfers</td><td>IT-enabled processes</td><td><span class="b-new">New</span></td><td>Manual intervention</td><td>Replace human intervention in product transfers</td><td class="nm">Not Mentioned</td><td>Shrunk time lag; moderated working capital</td><td>Increased fulfillment.</td></tr>
+          <tr><td>2016</td><td>Commercial</td><td>Dealer Connectivity</td><td>Dealer Portal</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Real-time picture of corporate engagement</td><td class="nm">Not Mentioned</td><td>Strengthened dealer trust.</td><td class="nm">Not Mentioned</td></tr>
+          <tr><td>2018</td><td>Manufacturing</td><td>Industry 4.0 Adoption</td><td>IoT, Low-cost automation</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Operational excellence</td><td class="nm">Not Mentioned</td><td>Symmetrical process improvements.</td><td>Believes in futuristic thinking.</td></tr>
+          <tr><td>2018</td><td>Other (HR)</td><td>Digitalization of People Processes</td><td>V-Connect (Webcast), Skype for Business</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Maintain dialogue with young employees</td><td class="nm">Not Mentioned</td><td>Improved people performance.</td><td>Focus on workplace vibrancy.</td></tr>
+          <tr><td>2019</td><td>Dispatch</td><td>Warehouse Rationalization</td><td class="nm">Not Mentioned</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Moderate logistics costs</td><td>40 to 30 warehouses</td><td>Increased sales velocity; shrunk delivery time.</td><td>Strategic footprint optimization.</td></tr>
+          <tr><td>2019</td><td>R&amp;D</td><td>RPSCOE Center</td><td>Advanced Simulation &amp; Predictive tech</td><td><span class="b-new">New</span></td><td>Mid-sized R&amp;D</td><td>Future-ready mobility (EV, Emission)</td><td class="nm">Not Mentioned</td><td>Accelerated product evaluation; shrunk time-to-market.</td><td>Leading industry on tech front.</td></tr>
+          <tr><td>2020</td><td>Product</td><td>Smart Tyre</td><td>Treel (TPMS Sensors)</td><td><span class="b-new">New</span></td><td>Conventional Tyres</td><td>Remote tyre health monitoring</td><td class="nm">Not Mentioned</td><td>Enhanced safety; reduced operational costs for fleets.</td><td>Fusion of IoT, AI, ML, and Data Science.</td></tr>
+          <tr><td>2020</td><td>Manufacturing</td><td>Internet of Operations</td><td>IoT Backbone</td><td><span class="b-new">New</span></td><td>Reactive response</td><td>Predictive maintenance</td><td>3% mixing productivity increase (Q1)</td><td>Ascertain equipment health; higher capacity utilization.</td><td>Equipment can "talk" to IT backbone.</td></tr>
+          <tr><td>2020</td><td>SC / Finance</td><td>Demand Forecasting</td><td>Big Data Analytics</td><td><span class="b-new">New</span></td><td>Manual/Arbitrary</td><td>Inventory &amp; offtake management</td><td class="nm">Not Mentioned</td><td>Moderated raw material stocking; enhanced liquidity.</td><td>Analytics on consumer behavior.</td></tr>
+          <tr><td>2021</td><td>Cust. Service</td><td>Digital Claims</td><td>AI &amp; Machine Learning</td><td><span class="b-new">New</span></td><td>Conventional process</td><td>Settle warranty claims</td><td>95% of claims settled; 30 min resolution</td><td>Turnaround time reduced from 3-6 days to 30 mins.</td><td>~500x improvement in closure time.</td></tr>
+          <tr><td>2021</td><td>Other (HR)</td><td>Mobile Learning</td><td>Oust App</td><td><span class="b-new">New</span></td><td>Physical training</td><td>Training during pandemic lockdowns</td><td class="nm">Not Mentioned</td><td>Sustained learning for field force.</td><td>Reinforced knowledge sharing.</td></tr>
+          <tr><td>2022</td><td>SC / Logistics</td><td>SC Digitization</td><td>TMS &amp; WMS</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Efficiency in outbound operations</td><td class="nm">Not Mentioned</td><td>Cost reduction; optimal resource use.</td><td>Transport &amp; Warehouse systems.</td></tr>
+          <tr><td>2023</td><td>R&amp;D</td><td>Design Automation</td><td>ELXIR (SIEMENS)</td><td><span class="b-upg">Upgraded</span></td><td>Manual PLM</td><td>Shrunk NPD cycle</td><td>24 to 6 months</td><td>Cycle time compressed by 75%.</td><td>End-to-end digital twin.</td></tr>
+          <tr><td>2023</td><td>Supply Chain</td><td>P2P Implementation</td><td>Oracle Procurement-to-Pay</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Operational efficiency</td><td class="nm">Not Mentioned</td><td>Improved transparency.</td><td>Global supply chain coverage.</td></tr>
+          <tr><td>2024</td><td>Logistics</td><td>Real-time Tracking</td><td>Oracle OTMS</td><td><span class="b-ong">Ongoing</span></td><td class="nm">Not Mentioned</td><td>Outbound visibility</td><td class="nm">Not Mentioned</td><td>End-to-end visibility of vehicles from plant to destination.</td><td>Oracle Transport Management.</td></tr>
+          <tr><td>2025</td><td>Manufacturing</td><td>Smart Controls</td><td>Vibration Analysis / Tech Monitoring</td><td><span class="b-exp">Expanded</span></td><td class="nm">Not Mentioned</td><td>Prevent breakdowns</td><td>11 Mn data points monthly</td><td>Improved process effectiveness; prevents disruptions.</td><td>Implementation in Chennai &amp; Mysuru.</td></tr>
+          <tr><td>2025</td><td>Manufacturing</td><td>AI in Manufacturing</td><td>AI Algorithms</td><td><span class="b-exp">Expanded</span></td><td class="nm">Not Mentioned</td><td>Process consistency</td><td class="nm">Not Mentioned</td><td>AI used for product marking and maintenance.</td><td>Cloud-based dashboards.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+  <!-- S2 Tools -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">2</span>Digital Tools Inventory</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('jk-t2',this.value)"><span class="row-cnt" id="jk-t2-c"></span><button class="btn-exp-sec" onclick="expSec('jk-t2','JK_Tools')">Export</button></div><div class="tbl-wrap"><table id="jk-t2"><thead><tr><th onclick="srt('jk-t2',0)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('jk-t2',1)">First Year<span class="si">⇅</span></th><th onclick="srt('jk-t2',2)">Last Year<span class="si">⇅</span></th><th onclick="srt('jk-t2',3)">Area<span class="si">⇅</span></th><th onclick="srt('jk-t2',4)">Purpose<span class="si">⇅</span></th><th onclick="srt('jk-t2',5)">Status<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>Hand-held IT Tools</td><td>2016</td><td>2020</td><td>Sales / SC</td><td>Replenishment tracking</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>SAP HANA Cloud</td><td>2018</td><td>2023</td><td>Enterprise</td><td>Fleet Connect / Mobility</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Treel (IoT Sensors)</td><td>2020</td><td>2025</td><td>Product</td><td>Tyre pressure monitoring (TPMS)</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Internet of Operations (IoT)</td><td>2020</td><td>2025</td><td>Manufacturing</td><td>Predictive maintenance</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>AI / ML Claims Engine</td><td>2021</td><td>2025</td><td>Cust. Service</td><td>Warranty settlement</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Oust App</td><td>2021</td><td>2021</td><td>HR</td><td>Digital training</td><td class="nm">Not Mentioned Later</td></tr>
+    <tr><td>Oracle TMS</td><td>2022</td><td>2024</td><td>Logistics</td><td>Real-time vehicle tracking</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>ELXIR (SIEMENS PLM)</td><td>2023</td><td>2025</td><td>R&amp;D</td><td>Design cycle compression</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Oracle P2P</td><td>2023</td><td>2024</td><td>Supply Chain</td><td>Procurement automation</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Digital Twin / Simulation</td><td>2019</td><td>2025</td><td>R&amp;D</td><td>Virtual proving grounds</td><td><span class="b-act">Active</span></td></tr>
+  </tbody></table></div></div></div>
+  <!-- S3 Certs -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">3</span>Certifications &amp; Standards</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('jk-t3',this.value)"><span class="row-cnt" id="jk-t3-c"></span><button class="btn-exp-sec" onclick="expSec('jk-t3','JK_Certifications')">Export</button></div><div class="tbl-wrap"><table id="jk-t3"><thead><tr><th onclick="srt('jk-t3',0)">Year<span class="si">⇅</span></th><th onclick="srt('jk-t3',1)">Certification<span class="si">⇅</span></th><th onclick="srt('jk-t3',2)">Type<span class="si">⇅</span></th><th onclick="srt('jk-t3',3)">Applicable Area<span class="si">⇅</span></th><th onclick="srt('jk-t3',4)">Purpose<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>ISO 50001</td><td>ESG</td><td>All Locations</td><td>Energy Management System.</td></tr>
+    <tr><td>2016</td><td>ISO-27001</td><td>Digital</td><td>Manufacturing facilities</td><td>Information Security Management.</td></tr>
+    <tr><td>2018</td><td>TPM Excellence Award</td><td>Quality</td><td>Chennai Tyre Plant</td><td>Manufacturing excellence recognition.</td></tr>
+    <tr><td>2020</td><td>Sword of Honour</td><td>Safety</td><td>All 5 Indian Plants</td><td>Health &amp; Safety (British Safety Council).</td></tr>
+    <tr><td>2021</td><td>Green Co Platinum</td><td>ESG</td><td>Chennai / Vikrant Plants</td><td>Environmental performance.</td></tr>
+    <tr><td>2022</td><td>Globe of Honour</td><td>ESG</td><td>Kankroli, Vikrant, Chennai</td><td>Environmental stewardship.</td></tr>
+    <tr><td>2024</td><td>ISO 20400</td><td>ESG</td><td>Corporate</td><td>Sustainable Procurement standard.</td></tr>
+    <tr><td>2025</td><td>ISO 17025</td><td>Quality</td><td>Testing Laboratories</td><td>Laboratory Management standard.</td></tr>
+  </tbody></table></div></div></div>
+  <!-- S4 Business Impact -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">4</span>Business &amp; Operational Impact</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('jk-t4',this.value)"><span class="row-cnt" id="jk-t4-c"></span><button class="btn-exp-sec" onclick="expSec('jk-t4','JK_Biz_Impact')">Export</button></div><div class="tbl-wrap"><table id="jk-t4"><thead><tr><th onclick="srt('jk-t4',0)">Year<span class="si">⇅</span></th><th onclick="srt('jk-t4',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('jk-t4',2)">Area<span class="si">⇅</span></th><th onclick="srt('jk-t4',3)">Metric Type<span class="si">⇅</span></th><th onclick="srt('jk-t4',4)">Reported Change<span class="si">⇅</span></th><th onclick="srt('jk-t4',5)">Remarks<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr class="hi-row"><td>2016</td><td>IT replenishment</td><td>SC</td><td>Time</td><td class="nm">Not Mentioned</td><td>Shrunk time lag between sale and replenishment.</td></tr>
+    <tr class="hi-row"><td>2020</td><td>Internet of Ops</td><td>Manufacturing</td><td>Efficiency</td><td><strong>3% increase</strong></td><td>Mixing productivity strengthened in first quarter.</td></tr>
+    <tr class="hi-row"><td>2021</td><td>Digital Claims</td><td>Cust. Service</td><td>Time</td><td><strong>3 days to 30 min</strong></td><td>Settlement time reduced from days to minutes.</td></tr>
+    <tr class="hi-row"><td>2021</td><td>Digital Claims</td><td>Cust. Service</td><td>Efficiency</td><td><strong>~500x</strong></td><td>Improvement in closure time vs conventional processes.</td></tr>
+    <tr class="hi-row"><td>2023</td><td>ELXIR Automation</td><td>R&amp;D</td><td>Time</td><td><strong>24 to 6 months</strong></td><td>Shrunk tyre development tenure by 75%.</td></tr>
+    <tr class="hi-row"><td>2024</td><td>Rail Modal Shift</td><td>SC</td><td>Efficiency</td><td><strong>Doubled</strong></td><td>Rail transportation percentage doubled to reduce carbon.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>Smart Controls</td><td>Manufacturing</td><td>Quality</td><td><strong>11 Mn points</strong></td><td>Capturing anomalies monthly for predictive maintenance.</td></tr>
+  </tbody></table></div></div></div>
+  <!-- S5 Fin Reflection -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">5</span>Financial Reflection Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('jk-t5',this.value)"><span class="row-cnt" id="jk-t5-c"></span><button class="btn-exp-sec" onclick="expSec('jk-t5','JK_Fin_Reflection')">Export</button></div><div class="tbl-wrap"><table id="jk-t5"><thead><tr><th onclick="srt('jk-t5',0)">Year<span class="si">⇅</span></th><th onclick="srt('jk-t5',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('jk-t5',2)">Financial Impact?<span class="si">⇅</span></th><th onclick="srt('jk-t5',3)">Line Item<span class="si">⇅</span></th><th onclick="srt('jk-t5',4)">Remarks<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2020</td><td>Internet of Operations</td><td><span class="fin-y">Yes</span></td><td>Manufacturing Efficiency</td><td>3% mixing productivity increase (Q1).</td></tr>
+    <tr><td>2021</td><td>Digital Claims (AI/ML)</td><td><span class="fin-y">Yes</span></td><td>Cust. Service TAT</td><td>95% claims settled; resolution time 3-6 days to 30 mins.</td></tr>
+    <tr><td>2023</td><td>ELXIR Design Automation</td><td><span class="fin-y">Yes</span></td><td>R&amp;D Cycle Cost</td><td>NPD cycle compressed from 24 to 6 months.</td></tr>
+    <tr><td>2025</td><td>Smart Controls</td><td><span class="fin-n">No Direct Link Mentioned</span></td><td>N/A</td><td>11 Mn data points monthly for predictive maintenance.</td></tr>
+  </tbody></table></div></div></div>
+  <!-- S6 Fin Trends -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">6</span>Contextual Financial Trend Table</span><span class="sec-chev">▾</span></div><div class="sec-body">
+    <div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('jk-t6',this.value)"><button class="btn-chart" id="jk-cb" onclick="toggleChart('jk')">📈 Show Chart</button><span class="row-cnt" id="jk-t6-c"></span><button class="btn-exp-sec" onclick="expSec('jk-t6','JK_Fin_Trends')">Export</button></div>
+    <div class="tbl-wrap"><table id="jk-t6"><thead><tr><th onclick="srt('jk-t6',0)">Year<span class="si">⇅</span></th><th onclick="srt('jk-t6',1)">Revenue (₹ Cr)<span class="si">⇅</span></th><th onclick="srt('jk-t6',2)">EBITDA (%)<span class="si">⇅</span></th><th onclick="srt('jk-t6',3)">Employee Cost<span class="si">⇅</span></th><th onclick="srt('jk-t6',4)">Other Expenses<span class="si">⇅</span></th><th onclick="srt('jk-t6',5)">Inventory<span class="si">⇅</span></th><th onclick="srt('jk-t6',6)">Capex<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>7,410</td><td class="nm">Not Mentioned</td><td>549</td><td>1,223</td><td>741</td><td>1,430 (Brownfield)</td></tr>
+    <tr><td>2018</td><td>8,397</td><td>10.3%</td><td>766</td><td>1,607</td><td>1,515</td><td>748</td></tr>
+    <tr><td>2019</td><td>10,370</td><td>11.4%</td><td>851</td><td>1,939</td><td>1,691</td><td>595</td></tr>
+    <tr><td>2020</td><td>8,723</td><td>11.6%</td><td>868</td><td>1,732</td><td>1,614</td><td>374</td></tr>
+    <tr><td>2021</td><td>9,102</td><td>14.8%</td><td>844</td><td>1,547</td><td>1,833</td><td>198</td></tr>
+    <tr><td>2022</td><td>11,983</td><td>9.2%</td><td>871</td><td>2,130</td><td>2,367</td><td>343</td></tr>
+    <tr><td>2023</td><td>14,645</td><td>9.1%</td><td>986</td><td>2,829</td><td>2,238</td><td>441</td></tr>
+    <tr><td>2024</td><td>15,002</td><td class="nm">Not Mentioned</td><td>1,032</td><td>2,883</td><td>2,217</td><td>1,007</td></tr>
+    <tr><td>2025</td><td>14,693</td><td class="nm">Not Mentioned</td><td>1,098</td><td>2,810</td><td>2,398</td><td class="nm">Not Mentioned</td></tr>
+  </tbody></table></div>
+    <div class="chart-box" id="jk-chart"><canvas id="jk-cv" height="220"></canvas></div>
+  </div></div>
+  <!-- S7 Pattern -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">7</span>Transformation Pattern Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="pat-list">
+    <li><strong>First major digital initiative observed:</strong> IT-enabled processes for product transfers and demand fulfillment (2016).</li>
+    <li><strong>Most frequently used tools:</strong> SAP (HANA/ACE), IoT (Treel/Internet of Operations), AI/ML (Claims/NPD), and Oracle (TMS/P2P).</li>
+    <li><strong>Evidence of upgrades/replacements:</strong> Manual product conceptions replaced by Sales/Marketing-led digital conceptions (2020). Manual PLM processes upgraded to ELXIR automated design platform (2023). Manual warranty inspections replaced by AI-based image processing engine (2021).</li>
+    <li><strong>Any repeated investments without clear benefits:</strong> None explicitly stated as "failed"; however, global supply chain shocks (2021-22) initially outpaced planning gains due to external container shortages.</li>
+    <li><strong>Areas with strongest measurable improvement:</strong> Customer Service: 500x improvement in claims turnaround (2021). R&amp;D: 75% reduction in product development cycle (2023). Manufacturing: 11 million data points monthly for predictive maintenance (2025).</li>
+  </ul></div></div>
+  <!-- S8 Source -->
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">8</span>Source Traceability</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="src-list">
+    <li><strong>Financial Data &amp; Revenue Trends:</strong> Standalone/Consolidated P&amp;L and Balance Sheets.</li>
+    <li><strong>Digital &amp; Operational Initiatives:</strong> MD&amp;A sections of annual reports.</li>
+    <li><strong>R&amp;D &amp; Technology:</strong> Technology Absorption Annexures.</li>
+    <li><strong>Certifications:</strong> Business Responsibility Reports.</li>
+  </ul></div></div>
+</div><!-- /JK -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     BKT
+═══════════════════════════════════════════════════════════════ -->
+<div id="tab-bkt" class="co-panel">
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">1</span>Master Digital Initiatives Timeline<span class="primary-badge">PRIMARY</span></span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('bkt-t1',this.value)"><span class="row-cnt" id="bkt-t1-c"></span><button class="btn-exp-sec" onclick="expSec('bkt-t1','BKT_Timeline')">Export</button></div><div class="tbl-wrap"><table id="bkt-t1"><thead><tr><th onclick="srt('bkt-t1',0)">Year<span class="si">⇅</span></th><th onclick="srt('bkt-t1',1)">Area<span class="si">⇅</span></th><th onclick="srt('bkt-t1',2)">Initiative<span class="si">⇅</span></th><th onclick="srt('bkt-t1',3)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('bkt-t1',4)">Status<span class="si">⇅</span></th><th onclick="srt('bkt-t1',5)">Previous Tool<span class="si">⇅</span></th><th onclick="srt('bkt-t1',6)">Objective<span class="si">⇅</span></th><th onclick="srt('bkt-t1',7)">Reported Metrics<span class="si">⇅</span></th><th onclick="srt('bkt-t1',8)">Business Impact<span class="si">⇅</span></th><th onclick="srt('bkt-t1',9)">Comments<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>Other</td><td>ERP Foundation</td><td>SAP ERP</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Maintain financial and commercial discipline.</td><td class="nm">Not Mentioned</td><td>Credibility of data.</td><td>Foundation for global operations.</td></tr>
+    <tr><td>2017</td><td>Manufacturing</td><td>Energy Efficiency</td><td>VFD (Variable Frequency Drive)</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Reduce electricity consumption.</td><td class="nm">Not Mentioned</td><td>Energy savings.</td><td>Installed on Process cooling tower Pump.</td></tr>
+    <tr><td>2018</td><td>Manufacturing</td><td>Paperless Monitoring</td><td>Chartless recorders</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Resource conservation.</td><td class="nm">Not Mentioned</td><td>Reduced paper consumption.</td><td>Used in Tire Curing Presses.</td></tr>
+    <tr><td>2018</td><td>Other</td><td>HR Digitization</td><td>Paperless PMS</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Employee evaluation efficiency.</td><td class="nm">Not Mentioned</td><td>Reduced paper consumption.</td><td>Paperless Performance Management System.</td></tr>
+    <tr><td>2019</td><td>Dispatch</td><td>Product Traceability</td><td>Barcoding</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Counterfeit prevention.</td><td class="nm">Not Mentioned</td><td>Authenticity and better tracing.</td><td>Traceable back for authenticity.</td></tr>
+    <tr><td>2021</td><td>Manufacturing</td><td>Shop Floor Automation</td><td>Modernization &amp; Automation</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Improvement in quality and efficiency.</td><td>₹450 Cr Capex.</td><td>Automated material handling.</td><td>Expected completion H1FY23.</td></tr>
+    <tr><td>2021</td><td>Supply Chain</td><td>Inventory Visibility</td><td>DCS (Distributed Control System)</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Real-time stock tracking.</td><td class="nm">Not Mentioned</td><td>Instant stock position of oil.</td><td>Reduced manual intervention.</td></tr>
+    <tr><td>2021</td><td>Dispatch</td><td>Packing Efficiency</td><td>Automatic Packer</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Operational speed.</td><td>15% improvement.</td><td>Efficiency gain.</td><td>For paper bag packing.</td></tr>
+    <tr><td>2023</td><td>Manufacturing</td><td>Material Conveying</td><td>Noltec Conveying System</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Process Automation.</td><td class="nm">Not Mentioned</td><td>Automatic carbon transport.</td><td>Mistake-proofing techniques used.</td></tr>
+    <tr><td>2023</td><td>Manufacturing</td><td>RFID Implementation</td><td>RFID</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Error proofing.</td><td>100% accuracy.</td><td>Correct carbon loading.</td><td>Mistake proofing for carbon loading.</td></tr>
+    <tr><td>2023</td><td>Manufacturing</td><td>Robotic Painting</td><td>Robotic Auto Painting</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Finish precision.</td><td class="nm">Not Mentioned</td><td>Consistency in product finish.</td><td>Recipe-based software control.</td></tr>
+    <tr><td>2023</td><td>Manufacturing</td><td>Load Management</td><td>Power Management System</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Energy Efficiency.</td><td class="nm">Not Mentioned</td><td>Increased power generation.</td><td>Real-time load management.</td></tr>
+    <tr><td>2024</td><td>Manufacturing</td><td>Industry 4.0 Mixing</td><td>i-Ram2.0 Technology</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Mixing accuracy.</td><td class="nm">Not Mentioned</td><td>Verification of weighment.</td><td>For 700 Litre mixer ram operation.</td></tr>
+    <tr><td>2024</td><td>Supply Chain</td><td>Automated Storage</td><td>ASRS</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Storage optimization.</td><td class="nm">Not Mentioned</td><td>Optimized retrieval speed.</td><td>For finished product &amp; raw material.</td></tr>
+    <tr><td>2024</td><td>Other</td><td>HR Digital Hub</td><td>Darwinbox HRMS</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Process modernization.</td><td class="nm">Not Mentioned</td><td>Agility in performance mgmt.</td><td>Implemented across all units.</td></tr>
+    <tr><td>2025</td><td>Manufacturing</td><td>Shop Floor Digitization</td><td>Mini PCs (21.5")</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Eliminate hard copies.</td><td class="nm">Not Mentioned</td><td>Digitized tracking.</td><td>Installed across key processes.</td></tr>
+    <tr><td>2025</td><td>Manufacturing</td><td>Building Control</td><td>Line Craft Control System</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Error prevention.</td><td class="nm">Not Mentioned</td><td>Mistake-proofing in building.</td><td>Digital entry of tire serial numbers.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">2</span>Digital Tools Inventory</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('bkt-t2',this.value)"><span class="row-cnt" id="bkt-t2-c"></span><button class="btn-exp-sec" onclick="expSec('bkt-t2','BKT_Tools')">Export</button></div><div class="tbl-wrap"><table id="bkt-t2"><thead><tr><th onclick="srt('bkt-t2',0)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('bkt-t2',1)">First Year<span class="si">⇅</span></th><th onclick="srt('bkt-t2',2)">Last Year<span class="si">⇅</span></th><th onclick="srt('bkt-t2',3)">Area<span class="si">⇅</span></th><th onclick="srt('bkt-t2',4)">Purpose<span class="si">⇅</span></th><th onclick="srt('bkt-t2',5)">Status<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>SAP ERP</td><td>2016</td><td>2025</td><td>Other</td><td>Enterprise Resource Planning</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>VFD</td><td>2017</td><td>2025</td><td>Manufacturing</td><td>Power reduction/Speed control</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Chartless Recorders</td><td>2018</td><td>2021</td><td>Manufacturing</td><td>Eliminate paper usage</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>RFID</td><td>2023</td><td>2025</td><td>Manufacturing</td><td>Mistake proofing material loading</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Robotic Auto Painting</td><td>2023</td><td>2025</td><td>Manufacturing</td><td>Consistent tire finish</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>DCS (Distributed Control System)</td><td>2021</td><td>2025</td><td>Supply Chain</td><td>Inventory visibility (Oil)</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>ASRS (Automated Storage &amp; Retrieval)</td><td>2024</td><td>2025</td><td>Supply Chain</td><td>Optimized storage/retrieval</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Darwinbox HRMS</td><td>2024</td><td>2025</td><td>Other</td><td>HR and Contract labor mgmt</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Inkjet Tread Printing</td><td>2025</td><td>2025</td><td>Manufacturing</td><td>Digital product marking</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Mini PCs (21.5")</td><td>2025</td><td>2025</td><td>Manufacturing</td><td>Eliminate hard copies on shop floor</td><td><span class="b-act">Active</span></td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">3</span>Certifications &amp; Standards</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('bkt-t3',this.value)"><span class="row-cnt" id="bkt-t3-c"></span><button class="btn-exp-sec" onclick="expSec('bkt-t3','BKT_Certifications')">Export</button></div><div class="tbl-wrap"><table id="bkt-t3"><thead><tr><th onclick="srt('bkt-t3',0)">Year<span class="si">⇅</span></th><th onclick="srt('bkt-t3',1)">Certification<span class="si">⇅</span></th><th onclick="srt('bkt-t3',2)">Type<span class="si">⇅</span></th><th onclick="srt('bkt-t3',3)">Applicable Area<span class="si">⇅</span></th><th onclick="srt('bkt-t3',4)">Purpose<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>Four Star Export House</td><td>Other</td><td>Global</td><td>Export performance recognition.</td></tr>
+    <tr><td>2017</td><td>REACH SVHC</td><td>ESG</td><td>100% of tires</td><td>Chemical safety compliance.</td></tr>
+    <tr><td>2017</td><td>ISO 14001</td><td>ESG</td><td>Three manufacturing facilities</td><td>Environmental risk management.</td></tr>
+    <tr><td>2021</td><td>ISO 9001:2015</td><td>Quality</td><td>All tire manufacturing sites</td><td>Quality management system.</td></tr>
+    <tr><td>2021</td><td>Five Star Export House</td><td>Other</td><td>Global</td><td>High export status.</td></tr>
+    <tr><td>2023</td><td>AEO Tier II</td><td>Other</td><td>Global Dispatch</td><td>Faster cargo processing.</td></tr>
+    <tr><td>2023</td><td>IATF 16949:2016</td><td>Quality</td><td>Carbon Black manufacturing</td><td>Automotive quality standard.</td></tr>
+    <tr><td>2023</td><td>ISO/IEC 17025</td><td>Quality</td><td>Bhuj R&amp;D/Testing Lab</td><td>Laboratory competence.</td></tr>
+    <tr><td>2024</td><td>AEO Tier III</td><td>Other</td><td>Global Dispatch</td><td>Facilitates direct port delivery.</td></tr>
+    <tr><td>2024</td><td>ISO 45001:2018</td><td>Safety</td><td>Bhuj, Bhiwadi, Chopanki</td><td>Occupational Health and Safety.</td></tr>
+    <tr><td>2025</td><td>ISO 50001</td><td>ESG</td><td class="nm">Not Mentioned</td><td>Planned Energy Management.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">4</span>Business &amp; Operational Impact</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('bkt-t4',this.value)"><span class="row-cnt" id="bkt-t4-c"></span><button class="btn-exp-sec" onclick="expSec('bkt-t4','BKT_Biz_Impact')">Export</button></div><div class="tbl-wrap"><table id="bkt-t4"><thead><tr><th onclick="srt('bkt-t4',0)">Year<span class="si">⇅</span></th><th onclick="srt('bkt-t4',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('bkt-t4',2)">Area<span class="si">⇅</span></th><th onclick="srt('bkt-t4',3)">Metric Type<span class="si">⇅</span></th><th onclick="srt('bkt-t4',4)">Reported Change<span class="si">⇅</span></th><th onclick="srt('bkt-t4',5)">Remarks<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr class="hi-row"><td>2017</td><td>Energy Saving Projects</td><td>Manufacturing</td><td>Efficiency</td><td><strong>13.70 Lakh KWh</strong></td><td>Reduction in electricity consumption.</td></tr>
+    <tr class="hi-row"><td>2021</td><td>Automatic Packer</td><td>Dispatch</td><td>Efficiency</td><td><strong>15% increase</strong></td><td>Improvement in packing speed.</td></tr>
+    <tr class="hi-row"><td>2021</td><td>VFD in WTP pumps</td><td>Manufacturing</td><td>Efficiency</td><td><strong>1000 KWH/day</strong></td><td>Reduction in power consumption.</td></tr>
+    <tr><td>2021</td><td>DCS Integration</td><td>Supply Chain</td><td>Quality</td><td>Reduced claims</td><td>Claim losses reduced via consistency.</td></tr>
+    <tr class="hi-row"><td>2023</td><td>RFID mistake-proofing</td><td>Manufacturing</td><td>Quality</td><td><strong>100% accuracy</strong></td><td>100% accuracy in carbon loading.</td></tr>
+    <tr><td>2023</td><td>Power Management System</td><td>Manufacturing</td><td>Efficiency</td><td>Increased generation</td><td>Manage turbine load demand in real-time.</td></tr>
+    <tr class="hi-row"><td>2023</td><td>Backward Integration</td><td>Supply Chain</td><td>Cost</td><td><strong>70% internal supply</strong></td><td>Requirement for Carbon Black met internally.</td></tr>
+    <tr><td>2025</td><td>Shop Floor Mini PCs</td><td>Manufacturing</td><td>Time</td><td>Eliminated hard copies</td><td>Digital entry across key processes.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>Carbon Conversion</td><td>Manufacturing</td><td>Efficiency</td><td><strong>0.8% increase</strong></td><td>Conversion efficiency in Carbon Plant.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">5</span>Financial Reflection Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('bkt-t5',this.value)"><span class="row-cnt" id="bkt-t5-c"></span><button class="btn-exp-sec" onclick="expSec('bkt-t5','BKT_Fin_Reflection')">Export</button></div><div class="tbl-wrap"><table id="bkt-t5"><thead><tr><th onclick="srt('bkt-t5',0)">Year<span class="si">⇅</span></th><th onclick="srt('bkt-t5',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('bkt-t5',2)">Financial Impact?<span class="si">⇅</span></th><th onclick="srt('bkt-t5',3)">Line Item<span class="si">⇅</span></th><th onclick="srt('bkt-t5',4)">Statement from Report<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2017</td><td>Energy Saving Projects</td><td><span class="fin-y">Yes</span></td><td>Other Expenses (Power)</td><td>Achieved reduction in electricity consumption of 13.70 Lakh KWh and fuel-pet coke of 1127 MT.</td></tr>
+    <tr><td>2021</td><td>Automatic Packer</td><td><span class="fin-y">Yes</span></td><td>Other Expenses (Packing)</td><td>Product fire safety and packing efficiency improved by 15%.</td></tr>
+    <tr><td>2021</td><td>Modernization &amp; Automation</td><td><span class="fin-y">Yes</span></td><td>Capex</td><td>₹450 Cr dedicated to automation of existing equipment.</td></tr>
+    <tr><td>2023</td><td>RFID Implementation</td><td><span class="fin-n">No</span></td><td>No Direct Link Mentioned</td><td>100% accuracy in material loading.</td></tr>
+    <tr><td>2023</td><td>Power Management System</td><td><span class="fin-y">Yes</span></td><td>Other Income (Power Gen)</td><td>Manage turbine load demand in real-time resulting in increased power generation from Turbine sets.</td></tr>
+    <tr><td>2025</td><td>Innovation &amp; Digitalisation</td><td><span class="fin-n">No</span></td><td>No Direct Link Mentioned</td><td>Investments in digitalisation typically yield high returns through improved market positioning and customer satisfaction.</td></tr>
+    <tr><td>2025</td><td>Carbon Conversion</td><td><span class="fin-y">Yes</span></td><td>Manufacturing Cost</td><td>Carbon conversion efficiency increased by 0.8% in Carbon Plant.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">6</span>Supporting Financial Trend Table</span><span class="sec-chev">▾</span></div><div class="sec-body">
+    <p class="note">Figures in ₹ Lakhs. *FY2025 values converted from Crores to Lakhs for consistent formatting.</p>
+    <div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('bkt-t6',this.value)"><button class="btn-chart" id="bkt-cb" onclick="toggleChart('bkt')">📈 Show Chart</button><span class="row-cnt" id="bkt-t6-c"></span><button class="btn-exp-sec" onclick="expSec('bkt-t6','BKT_Fin_Trends')">Export</button></div>
+    <div class="tbl-wrap"><table id="bkt-t6"><thead><tr><th onclick="srt('bkt-t6',0)">Year<span class="si">⇅</span></th><th onclick="srt('bkt-t6',1)">Revenue (₹ Lakhs)<span class="si">⇅</span></th><th onclick="srt('bkt-t6',2)">EBITDA (%)<span class="si">⇅</span></th><th onclick="srt('bkt-t6',3)">Employee Cost<span class="si">⇅</span></th><th onclick="srt('bkt-t6',4)">Other Expenses<span class="si">⇅</span></th><th onclick="srt('bkt-t6',5)">Inventory<span class="si">⇅</span></th><th onclick="srt('bkt-t6',6)">Standalone Capex<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>3,27,252</td><td>35.8%</td><td>20,570</td><td>81,940</td><td>38,771</td><td>72,538</td></tr>
+    <tr><td>2017</td><td>3,78,384</td><td>36.4%</td><td>22,429</td><td>85,083</td><td>47,714</td><td>29,014</td></tr>
+    <tr><td>2018</td><td>4,46,097</td><td>32.3%</td><td>24,878</td><td>95,915</td><td>59,419</td><td>32,243</td></tr>
+    <tr><td>2019</td><td>5,20,999</td><td>29.1%</td><td>29,915</td><td>1,16,459</td><td>71,300</td><td>28,007</td></tr>
+    <tr><td>2020</td><td>4,81,124</td><td>31.3%</td><td>32,863</td><td>1,07,261</td><td>61,564</td><td>85,075</td></tr>
+    <tr><td>2021</td><td>5,78,319</td><td>33.8%</td><td>37,086</td><td>1,29,085</td><td>93,972</td><td>46,617</td></tr>
+    <tr><td>2022</td><td>8,29,512</td><td>29.1%</td><td>38,043</td><td>2,13,223</td><td>1,67,209</td><td>1,10,459</td></tr>
+    <tr><td>2023</td><td>9,75,953</td><td>20.9%</td><td>45,943</td><td>2,67,768</td><td>1,66,737</td><td>1,10,459</td></tr>
+    <tr><td>2024</td><td>9,36,887</td><td>28.5%</td><td>49,951</td><td>2,12,257</td><td>1,33,153</td><td>1,59,310</td></tr>
+    <tr><td>2025*</td><td>10,44,695</td><td>28.3%</td><td>55,436</td><td>2,37,453</td><td>1,78,193</td><td>1,33,773</td></tr>
+  </tbody></table></div>
+    <div class="chart-box" id="bkt-chart"><canvas id="bkt-cv" height="220"></canvas></div>
+  </div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">7</span>Transformation Pattern Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="pat-list">
+    <li><strong>First major digital initiative observed:</strong> Implementation of a global SAP ERP foundation mentioned in 2016 for financial and commercial discipline.</li>
+    <li><strong>Most frequently used tools:</strong> Variable Frequency Drives (VFDs) for multi-location energy and speed control; SAP ERP as the core enterprise software.</li>
+    <li><strong>Evidence of upgrades/replacements:</strong> The 2021 report details a ₹450 Cr capital expenditure for the "Modernization and Technology Upgradation" of existing equipment in Rajasthan and Bhuj; the 2024 report highlights the transition to i-Ram2.0 technology for mixing operations.</li>
+    <li><strong>Any repeated investments without clear benefits:</strong> Continuous, massive annual Capex in vertical integration (Carbon Black and Mould plants) to hedge supply chain risks; while objectives are clear (hedging), specific standalone financial returns on these individual units are not isolated from total tire revenue.</li>
+    <li><strong>Areas with strongest measurable improvement:</strong> Dispatch (15% packing efficiency gain via automatic packers in 2021); Manufacturing (100% accuracy in carbon loading via RFID in 2023); Shop Floor (elimination of hard copies in 2025 via Mini PCs).</li>
+    <li><strong>Areas with no visible improvement:</strong> Outbound Logistics Cost as a % of sales; despite digital efforts and AEO Tier III status, costs peaked at 11.5% in FY23 due to external "unprecedented ocean freight rates" and disruptions.</li>
+  </ul></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">8</span>Source Traceability</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="src-list">
+    <li><strong>Financial Highlights &amp; Revenue Trends:</strong> Standalone and Consolidated Financial Results (2016, 2022, 2024, 2025).</li>
+    <li><strong>Capex &amp; PPE Additions:</strong> Note 2 - Property, Plant and Equipment (2016, 2017, 2021, 2022, 2024, 2025).</li>
+    <li><strong>Digital Tools &amp; Benefits:</strong> Annexure IV - Technology Absorption (2019, 2021, 2023, 2024, 2025).</li>
+    <li><strong>Energy Metrics &amp; VFDs:</strong> Business Responsibility Report / BRSR (2017, 2021, 2022, 2025).</li>
+    <li><strong>Digital Strategy &amp; IT Risk:</strong> Management Discussion and Analysis (2021, 2022, 2024, 2025).</li>
+  </ul></div></div>
+</div><!-- /BKT -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CEAT
+═══════════════════════════════════════════════════════════════ -->
+<div id="tab-ceat" class="co-panel">
+  <p class="note" style="padding:0 0 6px;">Note: Reports for CEAT primarily refer to the implementation of Siemens' Manufacturing Execution System (MES) and its cloud-based evolution as part of the Industry 4.0 journey.</p>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">1</span>Master Digital Initiatives Timeline<span class="primary-badge">PRIMARY</span></span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('ceat-t1',this.value)"><span class="row-cnt" id="ceat-t1-c"></span><button class="btn-exp-sec" onclick="expSec('ceat-t1','CEAT_Timeline')">Export</button></div><div class="tbl-wrap"><table id="ceat-t1"><thead><tr><th onclick="srt('ceat-t1',0)">Year<span class="si">⇅</span></th><th onclick="srt('ceat-t1',1)">Area<span class="si">⇅</span></th><th onclick="srt('ceat-t1',2)">Initiative<span class="si">⇅</span></th><th onclick="srt('ceat-t1',3)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('ceat-t1',4)">Status<span class="si">⇅</span></th><th onclick="srt('ceat-t1',5)">Objective<span class="si">⇅</span></th><th onclick="srt('ceat-t1',6)">Reported Metrics<span class="si">⇅</span></th><th onclick="srt('ceat-t1',7)">Business Impact<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>Mfg</td><td>Nagpur Smart Plant</td><td>Industry 4.0</td><td><span class="b-new">New</span></td><td>First 2W tyre "Smart" plant in India.</td><td class="nm">Not Mentioned</td><td>Improved operational efficiency.</td></tr>
+    <tr><td>2017</td><td>Mfg</td><td>Smart Plant Project</td><td>Mistake proofing, Recipe Management</td><td><span class="b-ong">Ongoing</span></td><td>Better yields and performance access.</td><td class="nm">Not Mentioned</td><td>Reduced manual interventions.</td></tr>
+    <tr><td>2019</td><td>SCM</td><td>Partner Engagement</td><td>Dealer Portal</td><td><span class="b-new">New</span></td><td>Automate warranties and transactions.</td><td class="nm">Not Mentioned</td><td>Simplified operations; reduced manual tasks.</td></tr>
+    <tr><td>2019</td><td>Mfg</td><td>Asset Sweating</td><td>Maintenance 4.0</td><td><span class="b-new">New</span></td><td>Predictive alerts and traceability.</td><td class="nm">Not Mentioned</td><td>Improved asset efficiency.</td></tr>
+    <tr><td>2020</td><td>Comm</td><td>e-Claim App</td><td>Mobile Application</td><td><span class="b-new">New</span></td><td>On-spot claim resolution.</td><td>Resolution &lt; 1 hour</td><td>Spot resolution rose to 56%.</td></tr>
+    <tr><td>2020</td><td>Mfg</td><td>Early Warning</td><td>IoT condition monitoring</td><td><span class="b-new">New</span></td><td>Reduce downtime and component failure.</td><td class="nm">Not Mentioned</td><td>Eliminated paper check-sheets; improved OEE.</td></tr>
+    <tr><td>2021</td><td>Fin</td><td>Process Automation</td><td>RPA</td><td><span class="b-new">New</span></td><td>Automate routine accounting tasks.</td><td>70% reduction in TAT</td><td>Improved business efficiency.</td></tr>
+    <tr><td>2021</td><td>Mfg</td><td>Manufacturing Execution</td><td>Siemens MES &amp; PLM</td><td><span class="b-new">New</span></td><td>Control material movement.</td><td class="nm">Not Mentioned</td><td>Material savings and scrap reduction.</td></tr>
+    <tr><td>2022</td><td>Mfg</td><td>VR Training</td><td>VR / Real-time simulation</td><td><span class="b-new">New</span></td><td>Tyre building training for associates.</td><td>50% training cost reduction</td><td>100% workmen participation.</td></tr>
+    <tr><td>2023</td><td>Mfg</td><td>4IR Advancements</td><td>Advanced Analytics</td><td><span class="b-upg">Upgraded</span></td><td>Cycle time and scrap optimization.</td><td>20% lower cycle times; 46% scrap reduction</td><td>15% energy saving at Halol plant.</td></tr>
+    <tr><td>2023</td><td>Log</td><td>Dispatch Planning</td><td>Pando App</td><td><span class="b-new">New</span></td><td>Digitalize logistics movement.</td><td>Processing in mins vs days</td><td>Optimized route, load, and cost.</td></tr>
+    <tr><td>2024</td><td>SCM</td><td>Sales Forecasting</td><td>AI Technology</td><td><span class="b-new">New</span></td><td>Improve product availability.</td><td>India availability: 83% to 87%</td><td>Significant forecast accuracy improvement.</td></tr>
+    <tr><td>2024</td><td>SCM</td><td>Procure-to-Pay</td><td>OCR &amp; SRM</td><td><span class="b-new">New</span></td><td>Integrated transactions.</td><td class="nm">Not Mentioned</td><td>Accuracy and speed of transactions.</td></tr>
+    <tr><td>2025</td><td>Mfg</td><td>Advanced Manufacturing</td><td>Digital Twin</td><td><span class="b-new">New</span></td><td>Plant-level scheduling (Chennai).</td><td>25% labour productivity gain</td><td>Inducted into Global Lighthouse Network.</td></tr>
+    <tr><td>2025</td><td>SCM</td><td>B2B Ordering</td><td>B2B E-commerce Platform</td><td><span class="b-new">New</span></td><td>Streamline dealer interactions.</td><td>10% Indian partners onboarded</td><td>Targeted 100% rollout by FY26.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">2</span>Digital Tools Inventory</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('ceat-t2',this.value)"><span class="row-cnt" id="ceat-t2-c"></span><button class="btn-exp-sec" onclick="expSec('ceat-t2','CEAT_Tools')">Export</button></div><div class="tbl-wrap"><table id="ceat-t2"><thead><tr><th onclick="srt('ceat-t2',0)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('ceat-t2',1)">First Mentioned<span class="si">⇅</span></th><th onclick="srt('ceat-t2',2)">Last Mentioned<span class="si">⇅</span></th><th onclick="srt('ceat-t2',3)">Area<span class="si">⇅</span></th><th onclick="srt('ceat-t2',4)">Purpose<span class="si">⇅</span></th><th onclick="srt('ceat-t2',5)">Status<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>MES (Manufacturing Execution System)</td><td>2021</td><td>2025</td><td>Mfg</td><td>Material movement and data integration.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>RPA (Robotic Process Automation)</td><td>2021</td><td>2024</td><td>Fin/SCM</td><td>Automate routine tasks and benchmarking.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Dealer Portal (incl. v6.0)</td><td>2019</td><td>2024</td><td>SCM</td><td>Interface for warranties and claims.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Pando App</td><td>2023</td><td>2023</td><td>Log</td><td>Patented algorithm for route optimization.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>AI Image Analytics</td><td>2023</td><td>2023</td><td>Mktg</td><td>Automated warranty registration via photos.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>'Sherlock' AI Bot</td><td>2022</td><td>2022</td><td>HR</td><td>Employee grievance resolution.</td><td><span class="b-act">Active</span></td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">3</span>Certifications &amp; Standards</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('ceat-t3',this.value)"><span class="row-cnt" id="ceat-t3-c"></span><button class="btn-exp-sec" onclick="expSec('ceat-t3','CEAT_Certifications')">Export</button></div><div class="tbl-wrap"><table id="ceat-t3"><thead><tr><th onclick="srt('ceat-t3',0)">Year<span class="si">⇅</span></th><th onclick="srt('ceat-t3',1)">Certification<span class="si">⇅</span></th><th onclick="srt('ceat-t3',2)">Type<span class="si">⇅</span></th><th onclick="srt('ceat-t3',3)">Applicable Area<span class="si">⇅</span></th><th onclick="srt('ceat-t3',4)">Purpose<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2017</td><td>Deming Prize</td><td>Quality</td><td>CEAT Limited</td><td>First tyre brand outside Japan to win.</td></tr>
+    <tr><td>2023</td><td>Lighthouse Designation</td><td>Digital</td><td>Halol Plant</td><td>First tyre brand globally recognized by WEF.</td></tr>
+    <tr><td>2023</td><td>Deming Grand Prize</td><td>Quality</td><td>CEAT Limited</td><td>Highest achievement in TQM worldwide.</td></tr>
+    <tr><td>2024</td><td>Lighthouse Induction</td><td>Digital</td><td>Chennai Plant</td><td>Second plant in the WEF Global Network.</td></tr>
+    <tr><td>2024</td><td>ISO 46001:2019</td><td>ESG</td><td>Bhandup Plant</td><td>Water Efficiency Management System.</td></tr>
+    <tr><td>2025</td><td>ISO 20400:2017</td><td>ESG</td><td>Supply Chain</td><td>Sustainable Procurement certification.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">4</span>Business &amp; Operational Impact</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('ceat-t4',this.value)"><span class="row-cnt" id="ceat-t4-c"></span><button class="btn-exp-sec" onclick="expSec('ceat-t4','CEAT_Biz_Impact')">Export</button></div><div class="tbl-wrap"><table id="ceat-t4"><thead><tr><th onclick="srt('ceat-t4',0)">Year<span class="si">⇅</span></th><th onclick="srt('ceat-t4',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('ceat-t4',2)">Area<span class="si">⇅</span></th><th onclick="srt('ceat-t4',3)">Metric Type<span class="si">⇅</span></th><th onclick="srt('ceat-t4',4)">Reported Change<span class="si">⇅</span></th><th onclick="srt('ceat-t4',5)">Remarks<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr class="hi-row"><td>2021</td><td>RPA in Finance</td><td>Fin</td><td>Time</td><td><strong>70% reduction in TAT</strong></td><td>Significant improvement in accounting cycles.</td></tr>
+    <tr class="hi-row"><td>2022</td><td>VR Training</td><td>Mfg</td><td>Cost</td><td><strong>50% reduction</strong></td><td>Reduction in cost of training new associates.</td></tr>
+    <tr class="hi-row"><td>2023</td><td>4IR Advancements</td><td>Mfg</td><td>Efficiency</td><td><strong>46% scrap reduction</strong></td><td>Achieved at Halol Lighthouse site.</td></tr>
+    <tr class="hi-row"><td>2024</td><td>AI Forecasting</td><td>SCM</td><td>Time</td><td><strong>83% to 87%</strong></td><td>Improvement in product availability in India.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>Chennai Lighthouse</td><td>Mfg</td><td>Efficiency</td><td><strong>25% improvement</strong></td><td>Labor productivity gain via digital solutions.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>Chennai Lighthouse</td><td>Mfg</td><td>Time</td><td><strong>54% reduction</strong></td><td>Improvement in dispatch turnaround time.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">5</span>Financial Reflection Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('ceat-t5',this.value)"><span class="row-cnt" id="ceat-t5-c"></span><button class="btn-exp-sec" onclick="expSec('ceat-t5','CEAT_Fin_Reflection')">Export</button></div><div class="tbl-wrap"><table id="ceat-t5"><thead><tr><th onclick="srt('ceat-t5',0)">Year<span class="si">⇅</span></th><th onclick="srt('ceat-t5',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('ceat-t5',2)">Financial Impact?<span class="si">⇅</span></th><th onclick="srt('ceat-t5',3)">Line Item<span class="si">⇅</span></th><th onclick="srt('ceat-t5',4)">Statement from Report<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2021</td><td>RPA in Finance</td><td><span class="fin-y">Yes</span></td><td>TAT / Processes</td><td>"70% reduction in Turn-Around-Time ... core benefits of automation".</td></tr>
+    <tr><td>2022</td><td>RPA in Supply Chain</td><td><span class="fin-y">Yes</span></td><td>Bottom Line</td><td>"reducing the aged unproductive inventory which is impacting the bottom line".</td></tr>
+    <tr><td>2023</td><td>4IR Advancements</td><td><span class="fin-y">Yes</span></td><td>Energy / Cost</td><td>"site reduced cycle times by 20% ... and energy consumption by 15%".</td></tr>
+    <tr><td>2024</td><td>AI Forecasting</td><td><span class="fin-y">Yes</span></td><td>Inventory</td><td>"Significant improvement in forecast accuracy ... resulting in inventory reduction".</td></tr>
+    <tr><td>2025</td><td>Advanced Analytics</td><td><span class="fin-y">Yes</span></td><td>Efficiency</td><td>"31% improvement in overall operational efficiency".</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">6</span>Supporting Financial Trend Table</span><span class="sec-chev">▾</span></div><div class="sec-body">
+    <p class="note">Figures in ₹ Lacs. *FY25 EBITDA% inferred from standalone operating figures.</p>
+    <div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('ceat-t6',this.value)"><button class="btn-chart" id="ceat-cb" onclick="toggleChart('ceat')">📈 Show Chart</button><span class="row-cnt" id="ceat-t6-c"></span><button class="btn-exp-sec" onclick="expSec('ceat-t6','CEAT_Fin_Trends')">Export</button></div>
+    <div class="tbl-wrap"><table id="ceat-t6"><thead><tr><th onclick="srt('ceat-t6',0)">Year<span class="si">⇅</span></th><th onclick="srt('ceat-t6',1)">Revenue<span class="si">⇅</span></th><th onclick="srt('ceat-t6',2)">EBITDA (%)<span class="si">⇅</span></th><th onclick="srt('ceat-t6',3)">Employee Cost<span class="si">⇅</span></th><th onclick="srt('ceat-t6',4)">Other Expenses<span class="si">⇅</span></th><th onclick="srt('ceat-t6',5)">Inventory<span class="si">⇅</span></th><th onclick="srt('ceat-t6',6)">Capex<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2016</td><td>5,49,415</td><td>13.9%</td><td>42,912</td><td>84,721</td><td>61,925</td><td>~6,113</td></tr>
+    <tr><td>2018</td><td>6,16,134</td><td>10.3%</td><td>55,441</td><td>76,013</td><td>75,496</td><td>11,356</td></tr>
+    <tr><td>2020</td><td>6,58,111</td><td>10.7%</td><td>64,888</td><td>80,086</td><td>87,950</td><td>63,871</td></tr>
+    <tr><td>2022</td><td>9,31,263</td><td>7.5%</td><td>75,178</td><td>1,06,950</td><td>1,28,651</td><td>95,900</td></tr>
+    <tr><td>2024</td><td>11,89,260</td><td>13.9%</td><td>88,380</td><td>1,51,707</td><td>1,13,414</td><td>86,700</td></tr>
+    <tr><td>2025</td><td>13,17,165</td><td>~10.3%*</td><td>94,846</td><td>1,68,225</td><td>1,40,925</td><td>94,300</td></tr>
+  </tbody></table></div>
+    <div class="chart-box" id="ceat-chart"><canvas id="ceat-cv" height="220"></canvas></div>
+  </div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">7</span>Transformation Pattern Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="pat-list">
+    <li><strong>First major digital initiative observed:</strong> Commissioning of the Nagpur facility as India's first "Smart" plant in 2016.</li>
+    <li><strong>Most frequently used tools:</strong> Robotic Process Automation (RPA) (Finance, HR, SCM, Procurement), MES, and AI/ML for forecasting and quality.</li>
+    <li><strong>Evidence of upgrades/replacements:</strong> 2020: Replacement of paper check-sheets by IoT condition-monitoring. 2025: Traditional dealer ordering shifting to B2B E-commerce platform.</li>
+    <li><strong>Areas with strongest measurable improvement:</strong> Manufacturing Efficiency (cycle/scrap reduction at Halol) and Logistics Speed (dispatch TAT at Chennai).</li>
+    <li><strong>Areas with no visible improvement:</strong> Despite a 99.7% resolution rate, Grievance Redressal remains listed as a high-priority material concern for stakeholders annually.</li>
+  </ul></div></div>
+</div><!-- /CEAT -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     APOLLO TYRES
+═══════════════════════════════════════════════════════════════ -->
+<div id="tab-apo" class="co-panel">
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">1</span>Master Digital Initiatives Timeline<span class="primary-badge">PRIMARY</span></span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('apo-t1',this.value)"><span class="row-cnt" id="apo-t1-c"></span><button class="btn-exp-sec" onclick="expSec('apo-t1','Apollo_Timeline')">Export</button></div><div class="tbl-wrap"><table id="apo-t1"><thead><tr><th onclick="srt('apo-t1',0)">Year<span class="si">⇅</span></th><th onclick="srt('apo-t1',1)">Area<span class="si">⇅</span></th><th onclick="srt('apo-t1',2)">Initiative<span class="si">⇅</span></th><th onclick="srt('apo-t1',3)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('apo-t1',4)">Status<span class="si">⇅</span></th><th onclick="srt('apo-t1',5)">Prev. Tool<span class="si">⇅</span></th><th onclick="srt('apo-t1',6)">Objective<span class="si">⇅</span></th><th onclick="srt('apo-t1',7)">Reported Metrics<span class="si">⇅</span></th><th onclick="srt('apo-t1',8)">Business Impact<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2017</td><td>IT Infrastructure</td><td>Core ERP</td><td>SAP</td><td><span class="b-ong">Ongoing</span></td><td class="nm">Not Mentioned</td><td>Maintain financial discipline and hygiene.</td><td class="nm">Not Mentioned</td><td>Core IT system for all operations.</td></tr>
+    <tr><td>2018</td><td>Supply Chain</td><td>Traceability</td><td>Barcode</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Improve product tracking.</td><td class="nm">Not Mentioned</td><td>Rollout for Chennai PCR plant.</td></tr>
+    <tr><td>2018</td><td>Manufacturing</td><td>Tyre Identification</td><td>RFID</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Permanent tyre identification.</td><td class="nm">Not Mentioned</td><td>Anti-theft mechanism enabled.</td></tr>
+    <tr><td>2021</td><td>Operations</td><td>Performance Recovery</td><td>DRIVE Initiative</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Pandemic response and efficiency.</td><td class="nm">Not Mentioned</td><td>Inventory and production optimisation.</td></tr>
+    <tr><td>2021</td><td>IT Enterprise</td><td>Strategy Shift</td><td>Digital CDO Office</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Drive transformation in customer experience and Industry 4.0.</td><td class="nm">Not Mentioned</td><td>Appointment of Hizmy Hassen as Chief Digital Officer.</td></tr>
+    <tr><td>2022</td><td>Supply Chain</td><td>Dealer Engagement</td><td>Sampark 2</td><td><span class="b-upg">Upgraded</span></td><td>Sampark</td><td>Advanced business transactions.</td><td class="nm">Not Mentioned</td><td>Comprehensive digital dealer platform.</td></tr>
+    <tr><td>2023</td><td>IT/Cloud</td><td>Cloudification</td><td>SAP RISE (AWS)</td><td><span class="b-new">New</span></td><td>On-premise</td><td>Agile and scalable IT solutions.</td><td>85%+ data in cloud</td><td>Migrated SAP and support systems to AWS.</td></tr>
+    <tr><td>2024</td><td>Manufacturing</td><td>Shopfloor Control</td><td>AMES</td><td><span class="b-new">New</span></td><td>Trad. MES</td><td>Scalability and high availability.</td><td class="nm">Not Mentioned</td><td>Implementing cloud-based MES across all plants.</td></tr>
+    <tr><td>2024</td><td>Manufacturing</td><td>Asset Mgt</td><td>Digital Maintenance</td><td><span class="b-new">New</span></td><td>Local tools</td><td>Save costs on spare parts.</td><td class="nm">Not Mentioned</td><td>Common global tool for predictive maintenance.</td></tr>
+    <tr><td>2024</td><td>Supply Chain</td><td>Demand Sensing</td><td>AI Technology</td><td><span class="b-new">New</span></td><td class="nm">Not Mentioned</td><td>Improve product availability.</td><td>83% to 87% increase</td><td>Significant forecast accuracy improvement in India.</td></tr>
+    <tr><td>2025</td><td>Enterprise</td><td>Transformation</td><td>Apollo 2.0</td><td><span class="b-new">New</span></td><td>Legacy systems</td><td>Modernise core "Plan to Deliver" and "Source to Pay".</td><td class="nm">Not Mentioned</td><td>Greenfield implementation for global operations.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">2</span>Digital Tools Inventory</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('apo-t2',this.value)"><span class="row-cnt" id="apo-t2-c"></span><button class="btn-exp-sec" onclick="expSec('apo-t2','Apollo_Tools')">Export</button></div><div class="tbl-wrap"><table id="apo-t2"><thead><tr><th onclick="srt('apo-t2',0)">Tool/Technology<span class="si">⇅</span></th><th onclick="srt('apo-t2',1)">First Year<span class="si">⇅</span></th><th onclick="srt('apo-t2',2)">Last Year<span class="si">⇅</span></th><th onclick="srt('apo-t2',3)">Area<span class="si">⇅</span></th><th onclick="srt('apo-t2',4)">Purpose<span class="si">⇅</span></th><th onclick="srt('apo-t2',5)">Status<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>SAP ERP</td><td>2017</td><td>2024</td><td>Enterprise</td><td>Core financial and operational system.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>RFID / TPMS</td><td>2018</td><td>2023</td><td>R&amp;D / Mfg</td><td>Tyre health monitoring and identification.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>SAP RISE (AWS)</td><td>2023</td><td>2025</td><td>IT Infrastructure</td><td>Hosting core IT on public cloud.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>AMES (Cloud MES)</td><td>2024</td><td>2025</td><td>Manufacturing</td><td>Manufacturing execution and data analytics.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>O9 System</td><td>2025</td><td>2025</td><td>Supply Chain</td><td>Advanced planning and delivery.</td><td><span class="b-act">Active</span></td></tr>
+    <tr><td>Global Data Lake</td><td>2025</td><td>2025</td><td>IT Data</td><td>Supporting AI/ML applications.</td><td>Active (10 TB+)</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">3</span>Certifications &amp; Standards</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('apo-t3',this.value)"><span class="row-cnt" id="apo-t3-c"></span><button class="btn-exp-sec" onclick="expSec('apo-t3','Apollo_Certifications')">Export</button></div><div class="tbl-wrap"><table id="apo-t3"><thead><tr><th onclick="srt('apo-t3',0)">Year<span class="si">⇅</span></th><th onclick="srt('apo-t3',1)">Certification<span class="si">⇅</span></th><th onclick="srt('apo-t3',2)">Type<span class="si">⇅</span></th><th onclick="srt('apo-t3',3)">Applicable Area<span class="si">⇅</span></th><th onclick="srt('apo-t3',4)">Purpose<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2017</td><td>ISO 26000</td><td>ESG</td><td>Global Operations</td><td>Alignment of sustainability framework.</td></tr>
+    <tr><td>2022</td><td>ISO 50001:2018</td><td>ESG</td><td>All Plants</td><td>Energy Management Standard.</td></tr>
+    <tr><td>2023</td><td>ISO 20400:2017</td><td>ESG</td><td>Supply Chain</td><td>Sustainable Procurement (First in Indian auto).</td></tr>
+    <tr><td>2023</td><td>Deming Prize</td><td>Quality</td><td>Chennai Plant</td><td>Total Quality Management (TQM) excellence.</td></tr>
+    <tr><td>2024</td><td>ISO 46001:2019</td><td>ESG</td><td>Chennai Plant</td><td>Water Efficiency Management System.</td></tr>
+    <tr><td>2024</td><td>TiSAX</td><td>Digital</td><td>Manufacturing Sites</td><td>Information security/Cybersecurity certification.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">4</span>Business &amp; Operational Impact</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('apo-t4',this.value)"><span class="row-cnt" id="apo-t4-c"></span><button class="btn-exp-sec" onclick="expSec('apo-t4','Apollo_Biz_Impact')">Export</button></div><div class="tbl-wrap"><table id="apo-t4"><thead><tr><th onclick="srt('apo-t4',0)">Year<span class="si">⇅</span></th><th onclick="srt('apo-t4',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('apo-t4',2)">Area<span class="si">⇅</span></th><th onclick="srt('apo-t4',3)">Metric Type<span class="si">⇅</span></th><th onclick="srt('apo-t4',4)">Reported Change<span class="si">⇅</span></th><th onclick="srt('apo-t4',5)">Remarks<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr class="hi-row"><td>2020</td><td>nRG series</td><td>Mfg</td><td>Efficiency</td><td><strong>~25% lower</strong></td><td>Rolling resistance compared to standard TBR.</td></tr>
+    <tr><td>2021</td><td>DRIVE Initiative</td><td>Ops</td><td>Cost</td><td>Not Specified</td><td>Pandemic response to eliminate cost and optimize inventory.</td></tr>
+    <tr class="hi-row"><td>2024</td><td>AI Sales Forecasting</td><td>Supply Chain</td><td>Time/Efficiency</td><td><strong>83% to 87%</strong></td><td>Increase in product availability in India.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>AMES Deployment</td><td>Mfg</td><td>Efficiency</td><td><strong>3–5% improvement</strong></td><td>Productivity gains via AI-led manufacturing.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>AWS HPC Solutions</td><td>R&amp;D</td><td>Time</td><td><strong>30% reduction</strong></td><td>Product design time reduction.</td></tr>
+    <tr class="hi-row"><td>2025</td><td>Cybersecurity</td><td>Digital</td><td>Time</td><td><strong>4 days to 30 mins</strong></td><td>Improvement in threat response time.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">5</span>Financial Reflection Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('apo-t5',this.value)"><span class="row-cnt" id="apo-t5-c"></span><button class="btn-exp-sec" onclick="expSec('apo-t5','Apollo_Fin_Reflection')">Export</button></div><div class="tbl-wrap"><table id="apo-t5"><thead><tr><th onclick="srt('apo-t5',0)">Year<span class="si">⇅</span></th><th onclick="srt('apo-t5',1)">Initiative<span class="si">⇅</span></th><th onclick="srt('apo-t5',2)">Financial Impact?<span class="si">⇅</span></th><th onclick="srt('apo-t5',3)">Line Item<span class="si">⇅</span></th><th onclick="srt('apo-t5',4)">Statement from Report<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2022</td><td>Digitalisation</td><td><span class="fin-y">Yes</span></td><td>Profitability</td><td>"a smarter operational ecosystem will help us become more efficient, profitable and sustainable".</td></tr>
+    <tr><td>2024</td><td>AI Sales Forecasting</td><td><span class="fin-y">Yes</span></td><td>Inventory</td><td>"Significant improvement in forecast accuracy... simultaneously reducing inventory levels".</td></tr>
+    <tr><td>2024</td><td>Digital Maintenance</td><td><span class="fin-y">Yes</span></td><td>Other Expenses</td><td>"This platform not only saves costs on spare parts".</td></tr>
+    <tr><td>2025</td><td>AI Acceleration</td><td><span class="fin-y">Yes</span></td><td>Productivity</td><td>"accelerating AI in manufacturing to drive efficiency gains".</td></tr>
+    <tr><td>Other</td><td>R&amp;D Initiatives</td><td><span class="fin-n">No Direct Link Mentioned</span></td><td>N/A</td><td>R&amp;D focuses on technology readiness, but direct line item savings not explicitly stated in snippets.</td></tr>
+  </tbody></table></div></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">6</span>Supporting Financial Trend Table</span><span class="sec-chev">▾</span></div><div class="sec-body">
+    <p class="note">Figures in ₹ Million unless specified. *FY2025 EBITDA% calculated based on Operating Profit vs Revenue.</p>
+    <div class="tbl-ctrl"><input class="srch" placeholder="Search…" oninput="filterTbl('apo-t6',this.value)"><button class="btn-chart" id="apo-cb" onclick="toggleChart('apo')">📈 Show Chart</button><span class="row-cnt" id="apo-t6-c"></span><button class="btn-exp-sec" onclick="expSec('apo-t6','Apollo_Fin_Trends')">Export</button></div>
+    <div class="tbl-wrap"><table id="apo-t6"><thead><tr><th onclick="srt('apo-t6',0)">Year<span class="si">⇅</span></th><th onclick="srt('apo-t6',1)">Revenue<span class="si">⇅</span></th><th onclick="srt('apo-t6',2)">EBITDA (%)<span class="si">⇅</span></th><th onclick="srt('apo-t6',3)">Employee Cost<span class="si">⇅</span></th><th onclick="srt('apo-t6',4)">Other Expenses<span class="si">⇅</span></th><th onclick="srt('apo-t6',5)">Inventory<span class="si">⇅</span></th><th onclick="srt('apo-t6',6)">Capex<span class="si">⇅</span></th></tr></thead><tbody>
+    <tr><td>2017</td><td>130,630</td><td>~15.3%</td><td>15,316</td><td>32,845</td><td>14,242</td><td>~35,000</td></tr>
+    <tr><td>2018</td><td>146,741</td><td>~12.0%</td><td>18,349</td><td>41,080</td><td>15,317</td><td>30,800</td></tr>
+    <tr><td>2019</td><td>172,734</td><td>~11.3%</td><td>19,890</td><td>47,882</td><td>16,846</td><td>21,370</td></tr>
+    <tr><td>2020</td><td>160,961</td><td>~12.0%</td><td>21,794</td><td>43,303</td><td>17,049</td><td>~25,000</td></tr>
+    <tr><td>2021</td><td>169,500</td><td>~16.5%</td><td>25,004</td><td>41,526</td><td>21,556</td><td>11,900</td></tr>
+    <tr><td>2022</td><td>~209,000</td><td>~12.4%</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td></tr>
+    <tr><td>2024</td><td class="nm">Not Specified</td><td>17.0%</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td><td>7,300</td></tr>
+    <tr><td>2025</td><td>261,230</td><td>~13.6%*</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td><td class="nm">Not Specified</td></tr>
+  </tbody></table></div>
+    <div class="chart-box" id="apo-chart"><canvas id="apo-cv" height="220"></canvas></div>
+  </div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">7</span>Transformation Pattern Analysis</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="pat-list">
+    <li><strong>First major digital initiative observed:</strong> Core IT stabilization using SAP ERP mentioned in 2017.</li>
+    <li><strong>Most frequently used tools:</strong> SAP, AWS Cloud (RISE), AI/ML (for forecasting and manufacturing), and RFID.</li>
+    <li><strong>Evidence of upgrades/replacements:</strong> 2022: Transition from Sampark to Sampark 2. 2023: Migration from on-premise SAP to AWS Cloud (RISE). 2024: Traditional MES replaced by cloud-based AMES. 2024: Legacy VPN replaced by Zero Trust Architecture (Global Protect).</li>
+    <li><strong>Any repeated investments without clear benefits:</strong> R&amp;D expenditure consistently hovers around 1.6%–1.8% of turnover, but management repeatedly notes inability to pass on raw material cost escalations due to intense competition.</li>
+    <li><strong>Areas with strongest measurable improvement:</strong> Supply Chain Visibility (83% to 87% product availability) and Cybersecurity (4 days to 30 mins response time).</li>
+    <li><strong>Areas with no visible improvement:</strong> Safety Outcomes (Rate of recordable work-related injuries increased to 0.78 in FY25 from 0.39 in FY24).</li>
+  </ul></div></div>
+  <div class="sec-card"><div class="sec-hdr" onclick="toggleSec(this)"><span class="sec-title"><span class="sec-num">8</span>Source Traceability</span><span class="sec-chev">▾</span></div><div class="sec-body"><ul class="src-list">
+    <li><strong>SAP &amp; Internal Controls:</strong> Annual Reports.</li>
+    <li><strong>RFID &amp; Digital SCM:</strong> Annual Reports.</li>
+    <li><strong>AI Forecasting &amp; AMES Impact:</strong> Annual Reports.</li>
+    <li><strong>SAP RISE (AWS):</strong> Annual Reports.</li>
+    <li><strong>Financial Trends:</strong> Standalone and Consolidated P&amp;L summaries across multiple years.</li>
+    <li><strong>Certifications:</strong> Source 7 Summary, Source 8 Summary.</li>
+  </ul></div></div>
+</div><!-- /APOLLO -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     💡 RECOMMENDATIONS TAB
+═══════════════════════════════════════════════════════════════ -->
+<div id="tab-rec" class="co-panel">
+
+  <!-- Intro banner -->
+  <div class="rec-intro">
+    <h2>💡 Strategic Recommendations &amp; Gap Analysis</h2>
+    <p>The following section provides a structured gap analysis and strategic recommendations derived from forensic examination of annual reports and cross-company benchmarking. Each recommendation is presented with an identified gap, a detailed strategic suggestion, and the expected impact. Currently covers <strong>Apollo Tyres</strong> with cross-company benchmarks against JK Tyre, CEAT, and BKT.</p>
+  </div>
+
+  <!-- Export button -->
+  <div style="margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <button class="btn-exp-rec" onclick="expRec()">⬇ Export Recommendations to Excel</button>
+    <span style="font-size:10px;color:var(--text3);">Exports structured recommendation data as a spreadsheet for offline analysis.</span>
+  </div>
+
+  <!-- ─── APOLLO TYRES ─── -->
+  <div class="rec-company">
+    <div class="rec-company-hdr" onclick="toggleRecCo(this)">
+      <div>
+        <div class="rec-co-name">🏢 Apollo Tyres — Gaps &amp; Strategic Improvements</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;">7 Strategic Recommendations across Manufacturing, Customer Service, EHS, Product, Tools, Certifications, and Finance</div>
+      </div>
+      <span class="rec-co-badge">Apollo Tyres</span>
+      <span class="rec-co-chev">▾</span>
+    </div>
+    <div class="rec-body">
+
+      <!-- REC 1 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">1</div>
+          <div>
+            <div class="rec-item-title">From "Cloud" to "Digital Twin" — Manufacturing Segment</div>
+            <div class="rec-item-subtitle">Segment: Manufacturing &nbsp;|&nbsp; Benchmark: CEAT (Halol Lighthouse)</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap — Current Status</div>
+            <div class="rec-card-body">Apollo has <strong>AMES (Cloud MES)</strong>, which tracks what <em>is</em> happening on the shop floor. They lack a <strong>Digital Twin</strong>, which predicts what <em>will</em> happen. This is an "Inside-Out" limitation — mastered internal tracking but not yet entered predictive simulation.</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Strategic Suggestion</div>
+            <div class="rec-card-body">By implementing a <strong>Digital Twin</strong> (as CEAT has done at Halol Lighthouse), Apollo can simulate the tyre-building process in real-time to pre-empt inefficiencies. This is the only scalable way to combat rising raw material costs without passing them to customers.</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact (Benchmarked from CEAT Halol)</div>
+            <div class="rec-card-body">Target <strong>46% reduction in scrap</strong> and <strong>15% energy saving</strong> — directly improving EBITDA margin which has been volatile between 11–17%.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>46%</span>Scrap Reduction Target</div>
+            <div class="rec-metric"><span>15%</span>Energy Saving Target</div>
+            <div class="rec-metric"><span>CEAT</span>Benchmark Company</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REC 2 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">2</div>
+          <div>
+            <div class="rec-item-title">From "Manual" to "AI-Visual" — Customer Service Segment</div>
+            <div class="rec-item-subtitle">Segment: Customer Service &nbsp;|&nbsp; Benchmark: JK Tyre (AI Claims Engine)</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap — Current Status</div>
+            <div class="rec-card-body">Apollo relies on <strong>Sampark 2</strong> (Dealer Portal) and manual inspections for warranty claims. They are losing the "Consumer Trust" race to JK Tyre, whose AI engine resolves 95% of claims in 30 minutes — a ~500x improvement over conventional processes.</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Strategic Suggestion</div>
+            <div class="rec-card-body">Launch an <strong>AI Image-Processing engine</strong> where customers upload a photo of a tyre defect (bulge, cut) via mobile. The AI model — trained on Apollo's quality database — instantly categorizes the failure as "Manufacturing Defect" or "User Damage" and triggers a resolution workflow automatically. Aim for claim TAT reduction from 5 days to under 60 minutes.</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact</div>
+            <div class="rec-card-body">Brand loyalty uplift enabling premium price command. Slash administrative cost of physical inspections. If a customer gets a warranty claim settled in <strong>&lt;60 minutes via mobile</strong>, brand loyalty will skyrocket — allowing Apollo to command a premium price.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>&lt;60min</span>Target Claim TAT</div>
+            <div class="rec-metric"><span>95%</span>JK Tyre Benchmark</div>
+            <div class="rec-metric"><span>~500x</span>Potential Improvement</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REC 3 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">3</div>
+          <div>
+            <div class="rec-item-title">From "Safety Training" to "IoT Early Warning" — EHS Segment</div>
+            <div class="rec-item-subtitle">Segment: EHS / Safety &nbsp;|&nbsp; Current: Reactive &nbsp;→&nbsp; Target: Predictive</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap — Current Status</div>
+            <div class="rec-card-body">Traditional safety protocols are failing. Apollo's rate of recordable work-related injuries <strong>doubled from 0.39 in FY24 to 0.78 in FY25</strong>. Safety is currently "Reactive" — fixing things after an accident — rather than anticipatory.</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Strategic Suggestion</div>
+            <div class="rec-card-body">Use the existing <strong>AWS Data Lake</strong> to run predictive safety models. Deploy <strong>IoT vibration sensors</strong> on machinery to alert operators <em>before</em> a mechanical failure occurs. This moves safety posture from "Compliance" to <strong>"Predictive Protection."</strong> Retrofit older machinery with vibration and heat sensors feeding the Data Lake.</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact</div>
+            <div class="rec-card-body">Move from calendar-based to condition-based maintenance. Reduce injury rate back below industry benchmark. Leverage the existing 10TB+ Data Lake investment to generate measurable EHS ROI — making the infrastructure earn its keep across safety, not just supply chain.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>0.78</span>Current Injury Rate FY25</div>
+            <div class="rec-metric"><span>0.39</span>Prior Year FY24</div>
+            <div class="rec-metric"><span>10TB+</span>Data Lake Available</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REC 4 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">4</div>
+          <div>
+            <div class="rec-item-title">Initiatives Timeline Gap — Product Digitization (Connected Mobility)</div>
+            <div class="rec-item-subtitle">Segment: Product / R&amp;D &nbsp;|&nbsp; Benchmark: JK Tyre (Treel TPMS / Smart Tyre)</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap</div>
+            <div class="rec-card-body">Apollo's digital timeline is "Inside-Out" — mastered internal systems (Cloud, ERP, MES) but ignored the "Smart Product." Competitors like JK Tyre have moved into the <strong>Connected Mobility</strong> space, turning tyres into data-gathering sensors via Treel (IoT/TPMS integration).</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Detailed Strategic Suggestion</div>
+            <div class="rec-card-body"><strong>Launch "Apollo Connect":</strong> Integrate Bluetooth-enabled <strong>TPMS (Tyre Pressure Monitoring Systems)</strong> into premium passenger and TBR lines.<br><br><strong>Fleet Management SaaS:</strong> Don't just sell tyres — sell "Kilometres-as-a-Service." Use data from connected tyres to provide fleet owners with predictive fuel-saving analytics. This shifts the revenue model from a one-time transaction to a <strong>recurring service revenue</strong> stream.</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact</div>
+            <div class="rec-card-body">New recurring revenue stream from SaaS/analytics layer. Differentiation in the premium and B2B fleet segment. Positions Apollo as a "mobility data company" rather than a commodity tyre manufacturer — commanding higher margins.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>SaaS</span>New Revenue Model</div>
+            <div class="rec-metric"><span>JK Tyre</span>Benchmark (Treel)</div>
+            <div class="rec-metric"><span>Premium</span>Target Segment</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REC 5 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">5</div>
+          <div>
+            <div class="rec-item-title">Tools Inventory Gap — RPA &amp; Shop-floor Automation</div>
+            <div class="rec-item-subtitle">Segment: Back-office &amp; Shop-floor &nbsp;|&nbsp; Benchmark: CEAT (RPA), BKT (Mini PCs / ASRS)</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap</div>
+            <div class="rec-card-body">Despite a 10TB Data Lake, Apollo lacks <strong>RPA (Robotic Process Automation)</strong> and deep <strong>IoT penetration</strong> on the shop floor. Back-office functions (Finance, HR) and shop-floor data collection still involve too much manual "human-in-the-loop" activity, inflating the "Other Expenses" line.</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Detailed Strategic Suggestion</div>
+            <div class="rec-card-body"><strong>RPA for Shared Services:</strong> Deploy bots to handle high-volume, low-judgment tasks — vendor invoice matching, employee onboarding, GST reconciliations. This will lower "Other Expenses" which are currently eating into EBITDA.<br><br><strong>Plant-wide Sensorization:</strong> Retrofit older machinery with vibration and heat sensors to feed the existing Data Lake, moving from "Calendar-based" maintenance to "Condition-based" maintenance (same as JK Tyre's 11Mn data points/month model).</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact (CEAT Benchmark)</div>
+            <div class="rec-card-body">CEAT achieved <strong>70% reduction in accounting TAT</strong> with RPA and reduced unproductive inventory impacting the bottom line. Apollo can replicate this across its larger global footprint for compounded savings.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>70%</span>TAT Reduction (CEAT RPA)</div>
+            <div class="rec-metric"><span>CEAT</span>Benchmark</div>
+            <div class="rec-metric"><span>BKT</span>Shop-floor Benchmark</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REC 6 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">6</div>
+          <div>
+            <div class="rec-item-title">Certifications Gap — WEF Lighthouse Designation</div>
+            <div class="rec-item-subtitle">Segment: Quality / Digital Prestige &nbsp;|&nbsp; Benchmark: CEAT (Halol &amp; Chennai Lighthouses)</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap</div>
+            <div class="rec-card-body">Apollo has foundational ISOs (50001, 46001, TiSAX, Deming Prize) but lacks a <strong>WEF Lighthouse designation</strong>. This is not merely a trophy — it represents a factory that has achieved measurable financial and environmental breakthroughs through 4IR technology. CEAT now has two Lighthouse plants (Halol + Chennai).</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Detailed Strategic Suggestion</div>
+            <div class="rec-card-body"><strong>Lighthouse Project (Chennai / Limda Plant):</strong> Select one flagship plant for a 12-month "Lighthouse Transformation" program. Focus areas: implement end-to-end digital integration from supplier to customer — targeting a <strong>30% reduction in CO2 emissions</strong> and a <strong>20% increase in labor productivity</strong>.<br><br>This certification will attract high-end European EV OEMs who demand "Green and Digital" supply chains as a prerequisite for qualification.</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact</div>
+            <div class="rec-card-body">Market differentiation for premium EV OEM supply chain qualification. Validated ESG credentials for ESG-driven institutional investors. CEAT's Halol Lighthouse delivered 46% scrap reduction + 20% lower cycle times — Apollo can target the same.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>30%</span>CO₂ Reduction Target</div>
+            <div class="rec-metric"><span>20%</span>Labor Productivity Target</div>
+            <div class="rec-metric"><span>CEAT</span>Has 2 Lighthouses</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REC 7 -->
+      <div class="rec-item">
+        <div class="rec-item-hdr" onclick="toggleRecItem(this)">
+          <div class="rec-num-bubble">7</div>
+          <div>
+            <div class="rec-item-title">Financial Trends Gap — Margin Squeeze via Digital Twin Simulation</div>
+            <div class="rec-item-subtitle">Segment: Financial / EBITDA Margin &nbsp;|&nbsp; Benefit Realization Transparency</div>
+          </div>
+          <span class="rec-toggle-icon">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div class="rec-card gap-card">
+            <div class="rec-card-lbl"><span class="dot"></span>The Gap</div>
+            <div class="rec-card-body">EBITDA is volatile (11–17%) because Apollo cannot "digitally hedge" raw material costs. Management mentions digital tools, but the CFO cannot yet point to a specific P&amp;L line and say "This ₹50 Crore saving came from AI." The strategy follows a "Safe" path (ERP → Cloud → MES) but the industry is moving toward <strong>Autonomous Decisioning</strong>.</div>
+          </div>
+          <div class="rec-card sug-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Detailed Strategic Suggestion</div>
+            <div class="rec-card-body"><strong>Digital ROI Dashboard:</strong> Create a tracking tool for <strong>Cost-per-Ton</strong> and <strong>Energy-per-Kg</strong> of rubber processed — making digital impact visible at the CFO level.<br><br><strong>Digital Twin Simulation for Curing/Mixing:</strong> Build a virtual replica of the curing and mixing process. Use "What-If" simulations to adjust raw material mix (synthetic vs. natural rubber ratios) in real-time based on market price and quality — without stopping production.<br><br><strong>Autonomous Supply Chain:</strong> Move beyond "Forecasting" to "Autonomous Orchestration." Let the system automatically reroute shipments based on weather or port delays without human intervention.<br><br><strong>Working Capital Optimization:</strong> Use AI Demand Sensing (currently at 87% accuracy) to automatically trigger raw material purchases, targeting a <strong>10–15% reduction in Inventory Days</strong>.</div>
+          </div>
+          <div class="rec-card imp-card">
+            <div class="rec-card-lbl"><span class="dot"></span>Expected Impact</div>
+            <div class="rec-card-body">"First-Time-Right" manufacturing reduces scrap by <strong>40%+</strong>, effectively neutralizing the impact of raw material price hikes on gross margin. Autonomous orchestration removes the "human delay" in supply chain rerouting. Inventory Day reduction of 10–15% directly improves working capital and Free Cash Flow generation.</div>
+          </div>
+          <div class="rec-metrics">
+            <div class="rec-metric"><span>40%+</span>Scrap Reduction Target</div>
+            <div class="rec-metric"><span>10–15%</span>Inventory Days Reduction</div>
+            <div class="rec-metric"><span>87%</span>Current AI Forecast Accuracy</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /rec-body -->
+  </div><!-- /rec-company -->
+
+  <!-- Summary comparison table -->
+  <div class="sec-card" style="margin-top:8px;">
+    <div class="sec-hdr" onclick="toggleSec(this)">
+      <span class="sec-title"><span class="sec-num">★</span>Recommendation Summary — Apollo vs Peers</span>
+      <span class="sec-chev">▾</span>
+    </div>
+    <div class="sec-body">
+      <div class="tbl-ctrl"><input class="srch" placeholder="Search summary…" oninput="filterTbl('rec-sum',this.value)"><span class="row-cnt" id="rec-sum-c"></span><button class="btn-exp-sec" onclick="expSec('rec-sum','Rec_Summary')">Export</button></div>
+      <div class="tbl-wrap"><table id="rec-sum">
+        <thead><tr>
+          <th onclick="srt('rec-sum',0)">#<span class="si">⇅</span></th>
+          <th onclick="srt('rec-sum',1)">Area<span class="si">⇅</span></th>
+          <th onclick="srt('rec-sum',2)">Current Status (Apollo)<span class="si">⇅</span></th>
+          <th onclick="srt('rec-sum',3)">Benchmark Company<span class="si">⇅</span></th>
+          <th onclick="srt('rec-sum',4)">Benchmark Achievement<span class="si">⇅</span></th>
+          <th onclick="srt('rec-sum',5)">Recommended Action<span class="si">⇅</span></th>
+          <th onclick="srt('rec-sum',6)">Target Metric<span class="si">⇅</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Manufacturing</td><td>AMES (Cloud MES) — tracks actuals only</td><td>CEAT</td><td>Digital Twin at Halol: 46% scrap reduction, 15% energy saving</td><td>Implement Digital Twin for curing/mixing simulation</td><td>46% scrap reduction; 15% energy saving</td></tr>
+          <tr><td>2</td><td>Customer Service</td><td>Sampark 2 (dealer portal) + manual inspections</td><td>JK Tyre</td><td>AI Claims Engine: 95% claims in 30 mins; ~500x improvement</td><td>Launch AI Image-Processing Warranty Engine (mobile)</td><td>Claim TAT &lt; 60 minutes</td></tr>
+          <tr><td>3</td><td>EHS / Safety</td><td>Injury rate doubled: 0.39 → 0.78 (FY24–FY25)</td><td>JK Tyre</td><td>IoT Smart Controls: 11Mn data points/month for predictive EHS</td><td>IoT vibration sensors + AWS Data Lake predictive models</td><td>Injury rate back to &lt; 0.40</td></tr>
+          <tr><td>4</td><td>Product Digitization</td><td>No connected tyre / smart product offering</td><td>JK Tyre</td><td>Treel (TPMS): fusion of IoT, AI, ML, Data Science in product</td><td>Launch "Apollo Connect" TPMS + Fleet SaaS model</td><td>New recurring revenue stream</td></tr>
+          <tr><td>5</td><td>Tools / Back-office</td><td>No RPA; manual Finance/HR workflows</td><td>CEAT</td><td>RPA: 70% reduction in accounting TAT; inventory bottom-line impact</td><td>RPA for shared services + plant-wide sensorization</td><td>70% TAT reduction in back-office</td></tr>
+          <tr><td>6</td><td>Certification / Prestige</td><td>TiSAX, Deming — no WEF Lighthouse</td><td>CEAT</td><td>2 WEF Lighthouses (Halol + Chennai); 25% labor productivity</td><td>12-month Lighthouse Transformation (Chennai/Limda)</td><td>30% CO₂ reduction; 20% labor productivity gain</td></tr>
+          <tr><td>7</td><td>Financial / EBITDA</td><td>Volatile EBITDA (11–17%); no digital ROI tracking</td><td>CEAT / BKT</td><td>CEAT: 31% operational efficiency improvement via analytics</td><td>Digital ROI Dashboard + Digital Twin for material mix optimization</td><td>40%+ scrap reduction; 10–15% inventory days reduction</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+</div><!-- /RECOMMENDATIONS -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════════ -->
+<script>
+/* ── THEME ─────────────────────────────────────────────────── */
+function toggleTheme(){
+  const h=document.documentElement;
+  h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark');
+  Object.keys(CD).forEach(k=>{if(document.getElementById(k+'-chart').classList.contains('vis'))drawChart(k);});
+}
+
+/* ── TABS ──────────────────────────────────────────────────── */
+function showTab(id,btn){
+  document.querySelectorAll('.co-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  initCounts();
+}
+
+/* ── SECTION COLLAPSE ──────────────────────────────────────── */
+function toggleSec(hdr){
+  hdr.classList.toggle('collapsed');
+  hdr.nextElementSibling.classList.toggle('collapsed');
+}
+
+/* ── REC COMPANY COLLAPSE ──────────────────────────────────── */
+function toggleRecCo(hdr){
+  hdr.classList.toggle('collapsed');
+  hdr.nextElementSibling.classList.toggle('collapsed');
+}
+
+/* ── REC ITEM TOGGLE ───────────────────────────────────────── */
+function toggleRecItem(hdr){
+  hdr.classList.toggle('open');
+  hdr.nextElementSibling.classList.toggle('open');
+}
+
+/* ── SORT ──────────────────────────────────────────────────── */
+const SS={};
+function srt(tid,col){
+  const t=document.getElementById(tid),tb=t.querySelector('tbody');
+  const rows=[...tb.querySelectorAll('tr')];
+  const k=tid+'_'+col; SS[k]=!SS[k];
+  rows.sort((a,b)=>{
+    const av=a.cells[col]?a.cells[col].innerText.trim():'';
+    const bv=b.cells[col]?b.cells[col].innerText.trim():'';
+    return SS[k]?av.localeCompare(bv,undefined,{numeric:true}):bv.localeCompare(av,undefined,{numeric:true});
+  });
+  rows.forEach(r=>tb.appendChild(r));
+  updCount(tid);
+}
+
+/* ── FILTER ────────────────────────────────────────────────── */
+function filterTbl(tid,q){
+  const t=document.getElementById(tid);if(!t)return;
+  const rows=t.querySelectorAll('tbody tr');
+  const qL=q.toLowerCase(); let vis=0;
+  rows.forEach(r=>{const show=r.innerText.toLowerCase().includes(qL);r.style.display=show?'':'none';if(show)vis++;});
+  const c=document.getElementById(tid+'-c');if(c)c.textContent=vis+' rows';
+}
+
+function updCount(tid){
+  const t=document.getElementById(tid);if(!t)return;
+  const rows=t.querySelectorAll('tbody tr');
+  let v=0;rows.forEach(r=>{if(r.style.display!=='none')v++;});
+  const c=document.getElementById(tid+'-c');if(c)c.textContent=v+' rows';
+}
+
+function initCounts(){
+  document.querySelectorAll('table[id]').forEach(t=>updCount(t.id));
+}
+
+/* ── CHARTS ────────────────────────────────────────────────── */
+const CD={
+  mrf:{labels:['14-16','16-17','17-18','18-19','19-20','20-21','21-22','22-23','23-24','24-25'],revenue:[20243,14651,15287,15960,16135,16060,19006,22824,24979,27943]},
+  jk:{labels:['2016','2018','2019','2020','2021','2022','2023','2024','2025'],revenue:[7410,8397,10370,8723,9102,11983,14645,15002,14693]},
+  bkt:{labels:['2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],revenue:[327252,378384,446097,520999,481124,578319,829512,975953,936887,1044695]},
+  ceat:{labels:['2016','2018','2020','2022','2024','2025'],revenue:[549415,616134,658111,931263,1189260,1317165]},
+  apo:{labels:['2017','2018','2019','2020','2021','2022','2025'],revenue:[130630,146741,172734,160961,169500,209000,261230]}
+};
+
+function toggleChart(co){
+  const box=document.getElementById(co+'-chart');
+  const btn=document.getElementById(co+'-cb');
+  const on=box.classList.contains('vis');
+  box.classList.toggle('vis',!on);
+  btn.classList.toggle('on',!on);
+  btn.textContent=on?'📈 Show Chart':'📉 Hide Chart';
+  if(!on)drawChart(co);
+}
+
+function drawChart(co){
+  const canvas=document.getElementById(co+'-cv');
+  const ctx=canvas.getContext('2d');
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const d=CD[co];
+  const W=canvas.parentElement.clientWidth-28;
+  canvas.width=W; canvas.height=220;
+  ctx.clearRect(0,0,W,220);
+  const pad={t:32,r:20,b:52,l:72};
+  const cW=W-pad.l-pad.r, cH=220-pad.t-pad.b;
+  const vals=d.revenue.filter(v=>v&&!isNaN(v));
+  const minV=Math.min(...vals)*0.9, maxV=Math.max(...vals)*1.05;
+  const tc=dark?'#94a3c0':'#475569';
+  const lc=dark?'#60a5fa':'#1a4fa8';
+  const gc=dark?'#2a3d5e':'#e2e8f0';
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(cH/4)*i;
+    ctx.strokeStyle=gc;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    const v=maxV-((maxV-minV)/4)*i;
+    ctx.fillStyle=tc;ctx.font='9px Verdana';ctx.textAlign='right';
+    ctx.fillText(v.toLocaleString('en-IN',{maximumFractionDigits:0}),pad.l-5,y+3);
+  }
+  const pts=d.labels.map((l,i)=>{
+    const x=pad.l+(cW/(d.labels.length-1))*i;
+    const v=d.revenue[i];
+    const y=(!v||isNaN(v))?null:pad.t+cH-((v-minV)/(maxV-minV))*cH;
+    return{x,y,l};
+  });
+  ctx.strokeStyle=lc;ctx.lineWidth=2.5;ctx.lineJoin='round';
+  ctx.beginPath();let s=false;
+  pts.forEach(p=>{if(!p.y)return;if(!s){ctx.moveTo(p.x,p.y);s=true;}else ctx.lineTo(p.x,p.y);});
+  ctx.stroke();
+  // fill area
+  ctx.beginPath();let f=true;
+  pts.forEach(p=>{if(!p.y)return;if(f){ctx.moveTo(p.x,p.y);f=false;}else ctx.lineTo(p.x,p.y);});
+  const lastPt=pts.filter(p=>p.y).pop();
+  const firstPt=pts.filter(p=>p.y)[0];
+  if(lastPt&&firstPt){ctx.lineTo(lastPt.x,pad.t+cH);ctx.lineTo(firstPt.x,pad.t+cH);ctx.closePath();}
+  ctx.fillStyle=dark?'rgba(96,165,250,0.1)':'rgba(26,79,168,0.07)';ctx.fill();
+  pts.forEach(p=>{
+    if(!p.y)return;
+    ctx.fillStyle=lc;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=tc;ctx.font='9px Verdana';ctx.textAlign='center';
+    ctx.fillText(p.l,p.x,pad.t+cH+16);
+  });
+  ctx.fillStyle=dark?'#e2e8f7':'#18243f';
+  ctx.font='bold 11px Verdana';ctx.textAlign='left';
+  ctx.fillText('Revenue Trend',pad.l,pad.t-10);
+}
+
+/* ── EXPORT SECTION ────────────────────────────────────────── */
+function expSec(tid,name){
+  const t=document.getElementById(tid);if(!t)return;
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.table_to_sheet(t);
+  XLSX.utils.book_append_sheet(wb,ws,name.substring(0,31));
+  XLSX.writeFile(wb,name+'.xlsx');
+}
+
+/* ── EXPORT RECOMMENDATIONS ────────────────────────────────── */
+function expRec(){
+  const wb=XLSX.utils.book_new();
+  // Structured data
+  const rows=[
+    ['#','Company','Area','Current Status (Apollo)','Benchmark Company','Benchmark Achievement','Recommended Action','Target Metric'],
+    [1,'Apollo Tyres','Manufacturing','AMES (Cloud MES) — tracks actuals only','CEAT','46% scrap reduction, 15% energy saving at Halol','Implement Digital Twin for curing/mixing simulation','46% scrap reduction; 15% energy saving'],
+    [2,'Apollo Tyres','Customer Service','Sampark 2 + manual inspections','JK Tyre','95% claims in 30 mins; ~500x improvement','Launch AI Image-Processing Warranty Engine (mobile)','Claim TAT < 60 minutes'],
+    [3,'Apollo Tyres','EHS / Safety','Injury rate doubled: 0.39 → 0.78 (FY24–FY25)','JK Tyre','IoT Smart Controls: 11Mn data points/month','IoT vibration sensors + AWS Data Lake predictive models','Injury rate back to < 0.40'],
+    [4,'Apollo Tyres','Product Digitization','No connected tyre / smart product offering','JK Tyre','Treel TPMS: IoT, AI, ML, Data Science in product','Launch "Apollo Connect" TPMS + Fleet SaaS','New recurring revenue stream'],
+    [5,'Apollo Tyres','Tools / Back-office','No RPA; manual Finance/HR workflows','CEAT','RPA: 70% reduction in accounting TAT','RPA for shared services + plant-wide sensorization','70% TAT reduction in back-office'],
+    [6,'Apollo Tyres','Certifications','TiSAX, Deming — no WEF Lighthouse','CEAT','2 WEF Lighthouses; 25% labor productivity','12-month Lighthouse Transformation (Chennai/Limda)','30% CO₂ reduction; 20% labor productivity gain'],
+    [7,'Apollo Tyres','Financial / EBITDA','Volatile EBITDA (11–17%); no digital ROI tracking','CEAT / BKT','CEAT: 31% operational efficiency improvement','Digital ROI Dashboard + Digital Twin for material mix','40%+ scrap reduction; 10–15% inventory days reduction'],
+  ];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,ws,'Apollo_Recommendations');
+  // Also add summary table if exists
+  const st=document.getElementById('rec-sum');
+  if(st){const ws2=XLSX.utils.table_to_sheet(st);XLSX.utils.book_append_sheet(wb,ws2,'Rec_Summary_Table');}
+  XLSX.writeFile(wb,'Apollo_Recommendations.xlsx');
+}
+
+/* ── EXPORT ALL ────────────────────────────────────────────── */
+function exportAll(){
+  const wb=XLSX.utils.book_new();
+  const IDs=[
+    ['mrf-t1','MRF_Timeline'],['mrf-t2','MRF_Tools'],['mrf-t3','MRF_Certifications'],['mrf-t4','MRF_Fin_Reflect'],['mrf-t5','MRF_Fin_Trends'],
+    ['jk-t1','JK_Timeline'],['jk-t2','JK_Tools'],['jk-t3','JK_Certifications'],['jk-t4','JK_Biz_Impact'],['jk-t5','JK_Fin_Reflect'],['jk-t6','JK_Fin_Trends'],
+    ['bkt-t1','BKT_Timeline'],['bkt-t2','BKT_Tools'],['bkt-t3','BKT_Certifications'],['bkt-t4','BKT_Biz_Impact'],['bkt-t5','BKT_Fin_Reflect'],['bkt-t6','BKT_Fin_Trends'],
+    ['ceat-t1','CEAT_Timeline'],['ceat-t2','CEAT_Tools'],['ceat-t3','CEAT_Certifications'],['ceat-t4','CEAT_Biz_Impact'],['ceat-t5','CEAT_Fin_Reflect'],['ceat-t6','CEAT_Fin_Trends'],
+    ['apo-t1','Apollo_Timeline'],['apo-t2','Apollo_Tools'],['apo-t3','Apollo_Certifications'],['apo-t4','Apollo_Biz_Impact'],['apo-t5','Apollo_Fin_Reflect'],['apo-t6','Apollo_Fin_Trends'],
+    ['rec-sum','Recommendations_Summary'],
+  ];
+  IDs.forEach(([id,name])=>{
+    const t=document.getElementById(id);if(!t)return;
+    const ws=XLSX.utils.table_to_sheet(t);
+    XLSX.utils.book_append_sheet(wb,ws,name.substring(0,31));
+  });
+  // Add rec structured data
+  const recRows=[
+    ['#','Area','Current Status (Apollo)','Benchmark Company','Benchmark Achievement','Recommended Action','Target Metric'],
+    [1,'Manufacturing','AMES (Cloud MES) — tracks actuals only','CEAT','46% scrap reduction, 15% energy saving at Halol','Implement Digital Twin for curing/mixing simulation','46% scrap reduction; 15% energy saving'],
+    [2,'Customer Service','Sampark 2 + manual inspections','JK Tyre','95% claims in 30 mins; ~500x improvement','Launch AI Image-Processing Warranty Engine (mobile)','Claim TAT < 60 minutes'],
+    [3,'EHS / Safety','Injury rate doubled: 0.39 → 0.78','JK Tyre','IoT Smart Controls: 11Mn data points/month','IoT vibration sensors + AWS Data Lake predictive models','Injury rate back to < 0.40'],
+    [4,'Product Digitization','No connected tyre offering','JK Tyre','Treel TPMS IoT integration','Launch "Apollo Connect" TPMS + Fleet SaaS','New recurring revenue stream'],
+    [5,'Tools / Back-office','No RPA; manual Finance/HR','CEAT','RPA: 70% reduction in accounting TAT','RPA for shared services + sensorization','70% TAT reduction'],
+    [6,'Certifications','No WEF Lighthouse','CEAT','2 WEF Lighthouses','12-month Lighthouse Transformation','30% CO₂ reduction; 20% labor productivity'],
+    [7,'Financial / EBITDA','Volatile EBITDA; no digital ROI tracking','CEAT / BKT','31% operational efficiency improvement','Digital ROI Dashboard + Digital Twin','40%+ scrap reduction; 10–15% inventory days reduction'],
+  ];
+  const wsRec=XLSX.utils.aoa_to_sheet(recRows);
+  XLSX.utils.book_append_sheet(wb,wsRec,'Apollo_Rec_Detail');
+  XLSX.writeFile(wb,'Digital_Transformation_Full_Dashboard.xlsx');
+}
+
+/* ── INIT ──────────────────────────────────────────────────── */
+window.addEventListener('load',initCounts);
+</script>
+</body>
+</html>
